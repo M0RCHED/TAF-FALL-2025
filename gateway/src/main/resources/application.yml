@@ -1,0 +1,40 @@
+server:
+  servlet:
+    context-path:
+  port: ${PORT_GATEWAY}
+
+spring:
+  application:
+    name: gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+eureka:
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT}/eureka
+
+springdoc:
+  #enable-native-support: true
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /v3/api-docs
+        name: API Gateway Servie
+      - url: /team1/api-docs
+        name: Team 1 Api Service
+      - url: /team3/api-docs
+        name: Team 2 Api Service
+      - url: /team3/api-docs
+        name: Team 3 Api Service

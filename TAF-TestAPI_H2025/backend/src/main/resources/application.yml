@@ -1,4 +1,7 @@
 spring:
+  application:
+    name: team2
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${SPRING_DATASOURCE_URL}
@@ -27,6 +30,11 @@ taf:
     testAPI_port: ${TEST_API_SERVICE_PORT}
     selenium_container_url: ${SELENIUM_URL}
     selenium_container_port: ${SELENIUM_PORT}
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT}/eureka
 
 server:
   port: 8080

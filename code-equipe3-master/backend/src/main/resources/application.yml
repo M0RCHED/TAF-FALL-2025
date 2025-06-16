@@ -1,4 +1,7 @@
 spring:
+  application:
+    name: team3
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://nostrasoft.com:3306/nostr321_taf-db
@@ -27,6 +30,10 @@ taf:
     testAPI_port: 8082
     selenium_container_url: http://selenium
     selenium_container_port: 8090
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT}/eureka
 
 server:
   port: 8083
