@@ -1,0 +1,19 @@
+spring:
+    application:
+        name: eureka-server
+
+server:
+    port: ${EUREKA_PORT:8761}
+
+eureka:
+    instance:
+        hostname: ${EUREKA_HOST:localhost}
+
+    username: ${EUREKA_USERNAME:eureka}
+    password: ${EUREKA_PASSWORD:password}
+    client:
+        register-with-eureka: false
+        fetch-registry: false
+        lease-renewal-interval-in-seconds: 30
+    server: 
+        enable-self-preservation: true

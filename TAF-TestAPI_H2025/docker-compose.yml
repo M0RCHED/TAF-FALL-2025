@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  testapi:
+    image: ${REGISTRY_BASE}/lionel-test-team2-testapi:${TEST_API_VERSION}
+    build:
+      context: ./testapi
+      dockerfile: ./Dockerfile
+
+  backend:
+    image: ${REGISTRY_BASE}/lionel-test-team2-backend:${BACKEND_VERSION}
+    build:
+      context: ./
+      dockerfile: ./backend/Dockerfile
+  MONGO_USERNAME=nicolagrenonvinci1
+  MONGO_PASSWORD=kEMpjBSPZKzrSiKC
+  frontend:
+    image: ${REGISTRY_BASE}/lionel-test-team2-frontend:${BACKEND_VERSION}
+    build:
+      context: ./frontend
+  
+  selenium:
+    image: ${REGISTRY_BASE}/lionel-test-team2-selenium:${BACKEND_VERSION}
+    container_name: selenium
+    build:
+      context: ./
+      dockerfile: ./selenium/Dockerfile
