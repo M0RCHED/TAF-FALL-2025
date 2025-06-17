@@ -36,6 +36,19 @@ eureka:
     serviceUrl:
       defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@${EUREKA_HOST}:${EUREKA_PORT}/eureka
 
+openapi:
+  service:
+    version: 1.0.0
+    url: http://${GATEWAY_HOST}:${GATEWAY_PORT} #api gateway url
+
+springdoc:
+  api-docs:
+    path: /api-docs
+
+  swagger-ui:
+    path:  /swagger-ui.html
+  show-actuator: true
+
 server:
   port: 8080
   error:

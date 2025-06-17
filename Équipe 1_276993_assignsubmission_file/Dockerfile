@@ -3,7 +3,8 @@ WORKDIR /code
 COPY pom.xml .
 COPY gatling ./gatling
 COPY backend ./backend
-RUN mvn clean install -D maven.test.skip
+RUN r \
+
 
 FROM openjdk:17-jdk-alpine as runner
 

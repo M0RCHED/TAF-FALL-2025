@@ -1,7 +1,14 @@
-FROM alpine/java:21-jdk
-
-RUN mkdir /app
+FROM openjdk:21-jdk-alpine AS build
 WORKDIR /app
-COPY build/libs/*.jar /app/eureka-server.jar
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/eureka-server.jar", "--spring.profiles.active=docker"]
-EXPOSE 8761
+COPY . .
+RUN ./gradlew build --no-daemon
+
+FROM openjdk:21-jdk
+ARG ROOT_DIR
+ENV ROOT_DIR $ROOT_DIR
+
+WORKDIR /opt/app
+COPY --from=builder /app/build/libs/*.jar /app.jar
+EXPOSE 8080
+
+ENTRYPOINT ["java","-jar","/app.jar"]
