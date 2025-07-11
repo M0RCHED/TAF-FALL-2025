@@ -1,0 +1,8 @@
+services:
+  testapi:
+    image: ${REGISTRY_BASE}/lionel-test-team1-testapi:${TEST_API_VERSION}
+    container_name: lionel-test-team1-testapi1
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env

@@ -1,0 +1,11 @@
+services:
+  auth:
+    image: ${REGISTRY_BASE}/lionel-test-auth:${AUTH_VERSION}
+    container_name: lionel-test-auth
+    depends_on:
+      - registry
+      - mongodb
+    ports:
+      - "8763:8080"
+    env_file:
+      - .env

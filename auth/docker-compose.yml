@@ -1,0 +1,8 @@
+services:
+  auth:
+    image: ${REGISTRY_BASE}/lionel-test-auth:${AUTH_VERSION}
+    container_name: lionel-test-auth
+    ports:
+      - "8762:8080"
+    env_file:
+      - .env

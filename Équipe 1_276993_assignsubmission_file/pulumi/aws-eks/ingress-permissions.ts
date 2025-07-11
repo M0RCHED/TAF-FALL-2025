@@ -9,7 +9,7 @@ export const ingressPermissions: any = {
             "Resource": "*",
             "Condition": {
                 "StringEquals": {
-                    "iam:AWSServiceName": "elasticloadbalancing.amazonaws.com"
+                    "iam:AWSServiceName": "elasticloadbalancing.amazonaws.ca"
                 }
             }
         },

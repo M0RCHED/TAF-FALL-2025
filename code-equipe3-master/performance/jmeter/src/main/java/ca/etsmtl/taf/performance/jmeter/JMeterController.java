@@ -8,9 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import ca.etsmtl.taf.performance.jmeter.model.*;
 import ca.etsmtl.taf.performance.jmeter.utils.JMeterRunner;
-
 
 @RestController
 @CrossOrigin(origins = "*", maxAge = 3600)

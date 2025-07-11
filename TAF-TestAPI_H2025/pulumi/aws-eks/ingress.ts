@@ -25,7 +25,7 @@ const saAssumeRolePolicy = pulumi
             {
               test: 'StringEquals',
               variable: `${url.replace('https://', '')}:aud`,
-              values: ['sts.amazonaws.com']
+              values: ['sts.amazonaws.ca']
             },
           ],
           effect: 'Allow',

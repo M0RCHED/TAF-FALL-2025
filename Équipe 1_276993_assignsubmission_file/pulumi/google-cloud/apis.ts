@@ -2,21 +2,21 @@
 import * as gcp from '@pulumi/gcp';
 
 export const cloudRunService = new gcp.projects.Service('cloudrun', {
-    service: 'run.googleapis.com'
+    service: 'run.googleapis.ca'
 });
 
 export const iamService = new gcp.projects.Service('iam', {
-    service: 'iam.googleapis.com'
+    service: 'iam.googleapis.ca'
 });
 
 export const cloudResourceManagerService = new gcp.projects.Service('cloudresourcemanager', {
-    service: 'cloudresourcemanager.googleapis.com'
+    service: 'cloudresourcemanager.googleapis.ca'
 });
 
 export const sqlAdminService = new gcp.projects.Service('sqladmin', {
-    service: 'sqladmin.googleapis.com'
+    service: 'sqladmin.googleapis.ca'
 });
 
 export const artifactRegistryService = new gcp.projects.Service('artifactregistry', {
-    service: 'artifactregistry.googleapis.com'
+    service: 'artifactregistry.googleapis.ca'
 });

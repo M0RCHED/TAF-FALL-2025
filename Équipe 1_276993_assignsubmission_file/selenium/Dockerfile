@@ -9,7 +9,8 @@ COPY selenium ./selenium
 WORKDIR /code/selenium
 RUN mvn clean install
 
-FROM maven:3.8.6-eclipse-temurin-11
+#FROM maven:3.8.6-eclipse-temurin-11
+FROM openjdk:17-slim
 
 RUN apt-get update
 # RUN apt-get install -y gconf-service libasound2 libatk1.0-0 libcairo2 libcups2 libfontconfig1 libgdk-pixbuf2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libxss1 fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils

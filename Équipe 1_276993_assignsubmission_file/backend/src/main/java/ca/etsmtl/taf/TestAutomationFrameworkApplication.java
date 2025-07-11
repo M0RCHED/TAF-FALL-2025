@@ -4,12 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import ca.etsmtl.taf.repository.RoleRepository;
 import ca.etsmtl.taf.entity.ERole;
 import ca.etsmtl.taf.entity.Role;
 import java.util.Optional;
 
 @SpringBootApplication
+@EnableDiscoveryClient
 public class TestAutomationFrameworkApplication implements CommandLineRunner {
 
     @Autowired

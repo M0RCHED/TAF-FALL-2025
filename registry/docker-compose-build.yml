@@ -3,4 +3,3 @@ services:
     image: ${REGISTRY_BASE}/lionel-test-registry:${REGISTRY_VERSION}
     build:
       context: .
-      dockerfile: Dockerfile

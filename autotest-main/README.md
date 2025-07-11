@@ -7,7 +7,7 @@ Autotest simplifies automated test generation by leveraging AI models. Follow th
 First, clone the repository:
 
 ```bash
-git clone git@github.com:PierreLouisLetoquart/autotest.git
+git clone git@github.ca:PierreLouisLetoquart/autotest.git
 ```
 
 Navigate to the project folder and install dependencies:

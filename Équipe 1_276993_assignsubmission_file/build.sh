@@ -5,7 +5,7 @@ USERNAME=$DOKCER_USER
 PASSWORD=$DOKCER_PASWORD
 REGISTRY=$REGISTRY_BASE
 
-docker compose -f docker-compose-build.yml build
+docker compose -f docker-compose-build.yml build backend
 
 docker tag lionel-test-team1-backend ${REGISTRY}/lionel-test-team1-backend:latest
 docker tag lionel-test-team1-frontend ${REGISTRY}/lionel-test-team1-frontend:latest

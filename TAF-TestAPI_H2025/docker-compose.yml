@@ -11,8 +11,7 @@ services:
     build:
       context: ./
       dockerfile: ./backend/Dockerfile
-  MONGO_USERNAME=nicolagrenonvinci1
-  MONGO_PASSWORD=kEMpjBSPZKzrSiKC
+
   frontend:
     image: ${REGISTRY_BASE}/lionel-test-team2-frontend:${BACKEND_VERSION}
     build:

@@ -4,8 +4,6 @@ services:
     build:
       context: ./
       dockerfile: ./backend/Dockerfile
-    ports:
-      - "8083:8083"
 
   frontend:
     image: ${REGISTRY_BASE}/lionel-test-team1-frontend:${FRONTEND_VERSION}

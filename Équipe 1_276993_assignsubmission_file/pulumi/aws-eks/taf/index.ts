@@ -37,7 +37,7 @@ export const DB_Password = config.requireSecret("TAF_DB_Password");
 });
 */
 
-export const DB_Address = "nostrasoft.com:3306/nostr321_taf-db" //DB_TAF_Backend.endpoint;
+export const DB_Address = "nostrasoft.ca:3306/nostr321_taf-db" //DB_TAF_Backend.endpoint;
 
 // Deploying TAF Backend
 const backendSecretDefinition = readK8sDefinition('taf/backend/Secret.yml');

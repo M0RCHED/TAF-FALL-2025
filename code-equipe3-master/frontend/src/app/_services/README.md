@@ -76,7 +76,7 @@ describe('AuthService', () => {
     const mockResponse = { message: 'User registered successfully!' };
     const fullName = 'John Doe';
     const username = 'testuser';
-    const email = 'testuser@example.com';
+    const email = 'testuser@example.ca';
     const password = 'testpassword';
 
     service.register(fullName, username, email, password).subscribe(response => {

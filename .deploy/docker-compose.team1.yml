@@ -1,0 +1,26 @@
+services:
+  team1backend:
+    image: ${REGISTRY_BASE}/lionel-test-team1-backend:${TEST_TEAM1_BACKEND_VERSION}
+    container_name: lionel-test-team1-backend
+    ports:
+      - "8083:8083"
+    env_file:
+      - .env
+      - .team1.env
+    depends_on:
+      - registry
+      - mongodb
+      - mysql
+      #- team1selenium
+      - testapi
+
+  team1frontend:
+    image: ${REGISTRY_BASE}/lionel-test-team1-frontend:${TEST_TEAM1_FRONTEND_VERSION}
+    container_name: lionel-test-team1-frontend
+    ports:
+      - "4200:80"
+    env_file:
+      - .env
+      - .team1.env
+    depends_on:
+      - team1backend
