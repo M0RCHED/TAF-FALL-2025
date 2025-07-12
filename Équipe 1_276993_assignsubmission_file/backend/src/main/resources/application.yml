@@ -11,6 +11,7 @@
 spring:
   application:
     name: team1
+
   cloud:
     compatibility-verifier:
       enabled: false

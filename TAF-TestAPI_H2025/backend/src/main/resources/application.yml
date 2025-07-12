@@ -1,4 +1,11 @@
 spring:
+  main:
+    web-application-type: servlet
+  #  web-application-type: reactive
+  #  allow-bean-definition-overriding: true
+  #main:
+  #  web-application-type: reactive
+
   application:
     name: team2
 
@@ -51,7 +58,9 @@ eureka:
 
 springdoc:
   api-docs:
+    enabled: true
     path: /api-docs
 
   swagger-ui:
+    enabled: true
     path:  /swagger-ui.html

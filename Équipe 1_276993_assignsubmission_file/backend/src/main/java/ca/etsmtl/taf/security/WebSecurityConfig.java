@@ -51,12 +51,11 @@ public class WebSecurityConfig {
         .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
         .authorizeHttpRequests((authz) -> authz
-          .requestMatchers("/**").permitAll() // جایگزین antMatchers
+          .requestMatchers("/**").permitAll()
         );
   
       http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
   
       return http.build();
-  
   }
 }

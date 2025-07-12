@@ -1,11 +1,13 @@
 FROM maven:3.9.5-sapmachine-17 as builder
 
 WORKDIR /code
-COPY . .
+COPY pom.xml .
+COPY frontend ./frontend
+COPY backend ./backend
+COPY selenium ./selenium
+RUN mvn clean install -D maven.test.skip
 
-RUN mvn package -D maven.test.skip
-
-FROM openjdk:17-slim as runner
+FROM openjdk:17-jdk-alpine
 
 WORKDIR /code
 

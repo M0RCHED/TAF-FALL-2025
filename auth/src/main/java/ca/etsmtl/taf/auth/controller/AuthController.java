@@ -1,8 +1,11 @@
 package ca.etsmtl.taf.auth.controller;
 
+import ca.etsmtl.taf.auth.payload.request.RefreshTokenRequest;
+import ca.etsmtl.taf.auth.payload.request.ValidateTokenRequest;
 import ca.etsmtl.taf.auth.payload.response.JwtResponse;
 import ca.etsmtl.taf.auth.services.JwtService;
 import ca.etsmtl.taf.auth.services.UserService;
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,11 +31,25 @@ public class AuthController {
   private UserService userService;
 
   @PostMapping("/signin")
-  public ResponseEntity<?> createAuthenticationToken(@RequestBody LoginRequest authenticationRequest) throws Exception {
+  public ResponseEntity<?> createAuthenticationToken(@RequestBody @Valid LoginRequest authenticationRequest) throws Exception {
     final JwtResponse response = this.jwtService.createJwtToken(authenticationRequest);
 
     return ResponseEntity.ok(response);
   }
+
+  @PostMapping("/validate-token")
+  public ResponseEntity<?> validateToken(@RequestBody @Valid ValidateTokenRequest validateTokenRequest) throws Exception {
+    final JwtResponse response = this.jwtService.createJwtToken(authenticationRequest);
+
+    return ResponseEntity.ok(response);
+  }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> validateToken(@RequestBody @Valid RefreshTokenRequest refreshTokenRequest) throws Exception {
+        final JwtResponse response = this.jwtService.refreshJwtToken(refreshTokenRequest);
+
+        return ResponseEntity.ok(response);
+    }
 
   @PostMapping("/signup")
   public ResponseEntity<?> registerUser(@RequestBody SignupRequest request) {
@@ -50,4 +67,5 @@ public class AuthController {
 
     return ResponseEntity.ok(new MessageResponse("Inscription Réussie.!"));
   }
+
 }

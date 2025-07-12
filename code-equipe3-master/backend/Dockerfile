@@ -5,7 +5,7 @@ COPY performance ./performance
 COPY backend ./backend
 RUN mvn clean install -D maven.test.skip
 
-FROM openjdk:17-jdk-alpine as runner
+FROM openjdk:17-jdk-alpine
 
 WORKDIR /opt
 COPY apache-jmeter-5.6.3.tgz .
