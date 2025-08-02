@@ -22,17 +22,17 @@ public class GatlingApiController {
             String gatlingJarPath = new GatlingJarPathProvider().getGatlingJarPath();
 
             String testRequest = "{\\\"baseUrl\\\":\\\""+gatlingRequest.getTestBaseUrl()+"\\\",\\\"scenarioName\\\":\\\""+gatlingRequest.getTestScenarioName()+"\\\",\\\"requestName\\\":\\\""+gatlingRequest.getTestRequestName()+"\\\",\\\"uri\\\":\\\""+gatlingRequest.getTestUri()+"\\\",\\\"requestBody\\\":\\\""+gatlingRequest.getTestRequestBody()+"\\\",\\\"methodType\\\":\\\""+gatlingRequest.getTestMethodType()+"\\\",\\\"usersNumber\\\":\\\""+gatlingRequest.getTestUsersNumber()+"\\\"}";
-            //Construire une liste d'arguments de ligne de commande à transmettre à Gatling
+            //Construire une liste d arguments de ligne de commande a transmettre a Gatling
             List<String> commandArgs = new ArrayList<>();
             commandArgs.add("java");
             commandArgs.add("-jar");
             commandArgs.add(gatlingJarPath);
             commandArgs.add("-DrequestJson=" + testRequest);
 
-            // Exécuter la simulation Gatling en tant que processus distinct
+            // Executer la simulation Gatling en tant que processus distinct
             ProcessBuilder processBuilder = new ProcessBuilder(commandArgs);
             Process process = processBuilder.start();
-            // Lire le résultat du processus
+            // Lire le resultat du processus
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             StringBuilder output = new StringBuilder();

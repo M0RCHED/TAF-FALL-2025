@@ -7,12 +7,12 @@ import { JMeterFTPRequest } from '../performance-test-api/jmeter-api/jmeter-ftp-
 
 import { GatlingRequest } from '../performance-test-api/gatling-api/gatling-request';
 
-const GATLING_API = `${environment.apiUrl}/api/gatling`;
-const JMETER_API = `${environment.apiUrl}/api/jmeter`;
+const GATLING_API = `${environment.apiUrl}/team1/api/gatling`;
+const JMETER_API = `${environment.apiUrl}/team1/api/jmeter`;
 const JMeter_HttpRequest_API = `${JMETER_API}/http`;
 const JMeter_FtpRequest_API = `${JMETER_API}/ftp`;
 // TODO: Move Selenium to separated service
-const SELENIUM_API = `${environment.apiUrl}/api/selenium`;
+const SELENIUM_API = `${environment.apiUrl}/team1/api/selenium`;
 
 const httpOptions = {
   headers: new HttpHeaders({ 'Content-Type': 'application/json' }),

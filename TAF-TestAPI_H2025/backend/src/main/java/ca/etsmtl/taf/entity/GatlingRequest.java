@@ -1,6 +1,10 @@
 package ca.etsmtl.taf.entity;
 
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document(collection = "gatling_requests")
 public class GatlingRequest {
+
     private String testBaseUrl;
     private String testScenarioName;
     private String testRequestName;

@@ -1,20 +1,50 @@
 FROM node:alpine AS builder
-WORKDIR /app
-COPY . .
+WORKDIR /frontend
+COPY frontend .
+
 RUN npm install && \
     npm run build
 
 FROM nginx:alpine
 
-COPY --from=builder /app/dist/* /usr/share/nginx/html/
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+ARG USER_ID=1001
+ARG GROUP_ID=1001
+ARG USER_NAME=nginx-user
+ARG GROUP_NAME=nginx-group
+
+# Create group and user with specified IDs
+RUN addgroup -g $GROUP_ID -S $GROUP_NAME
+RUN adduser -u $USER_ID -S $USER_NAME -G $GROUP_NAME -s /bin/sh
+
+COPY --from=builder /frontend/dist/* /usr/share/nginx/html/
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 WORKDIR /app
 
-COPY ./nginx.conf .
+COPY frontend/nginx.conf .
 
-COPY ./envsubst-file.sh .
+COPY frontend/envsubst-file.sh .
 
-RUN chmod 755 /app/envsubst-file.sh
+# Grant execute permissions to the entrypoint script
+RUN chmod +x /app/envsubst-file.sh
+
+# Ensure the cache directory exists and set ownership
+RUN mkdir -p /var/cache/nginx
+RUN chown -R "$USER_NAME":"$GROUP_NAME" /var/cache/nginx
+
+# Ensure the cache directory exists and set ownership
+RUN touch /var/run/nginx.pid
+RUN chown -R "$USER_NAME":"$GROUP_NAME" /var/run/nginx.pid
+
+#RUN envsubst '${BACKEND_API_URL}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf
+
+# Set ownership of relevant directories/files to the non-root user
+RUN chown -R "$USER_NAME":"$GROUP_NAME" /app/nginx.conf
+RUN chown -R "$USER_NAME":"$GROUP_NAME" /app/envsubst-file.sh
+RUN chown -R "$USER_NAME":"$GROUP_NAME" /etc/nginx/conf.d
+# Set read permissions for the user on the config file
+RUN chmod u+r /etc/nginx/conf.d/default.conf
+
+USER $USER_NAME
 
 ENTRYPOINT ["/app/envsubst-file.sh"]

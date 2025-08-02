@@ -4,7 +4,7 @@ import ca.etsmtl.taf.auth.payload.request.RefreshTokenRequest;
 import ca.etsmtl.taf.auth.payload.request.ValidateTokenRequest;
 import ca.etsmtl.taf.auth.payload.response.JwtResponse;
 import ca.etsmtl.taf.auth.services.JwtService;
-import ca.etsmtl.taf.auth.services.UserService;
+import ca.etsmtl.taf.auth.services.UserOldService;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +14,15 @@ import org.springframework.web.bind.annotation.*;
 import ca.etsmtl.taf.auth.payload.request.SignupRequest;
 import ca.etsmtl.taf.auth.payload.response.MessageResponse;
 import ca.etsmtl.taf.auth.payload.request.LoginRequest;
+import org.springframework.web.client.HttpClientErrorException;
+// import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RestController
-@RequestMapping("/auth")
+// @CrossOrigin(origins = "*")
+@RequestMapping("/api")
 public class AuthController {
 
-  @GetMapping("/home")
+  @GetMapping("/")
   public String greeting() {
     return "Hello from Auth Microservice!";
   }
@@ -28,28 +31,31 @@ public class AuthController {
   private JwtService jwtService;
 
   @Autowired
-  private UserService userService;
+  private UserOldService userService;
 
   @PostMapping("/signin")
-  public ResponseEntity<?> createAuthenticationToken(@RequestBody @Valid LoginRequest authenticationRequest) throws Exception {
+  public ResponseEntity<JwtResponse> createAuthenticationToken(@RequestBody @Valid LoginRequest authenticationRequest) throws Exception {
     final JwtResponse response = this.jwtService.createJwtToken(authenticationRequest);
-
+    //System.out.println("response");
+    //System.out.println(response.getFullName());
     return ResponseEntity.ok(response);
   }
 
   @PostMapping("/validate-token")
-  public ResponseEntity<?> validateToken(@RequestBody @Valid ValidateTokenRequest validateTokenRequest) throws Exception {
-    final JwtResponse response = this.jwtService.createJwtToken(authenticationRequest);
-
+  public ResponseEntity<Boolean> validateToken(@RequestBody @Valid ValidateTokenRequest validateTokenRequest) throws Exception {
+    final boolean response = this.jwtService.validateJwtToken(validateTokenRequest);
     return ResponseEntity.ok(response);
   }
 
-    @PostMapping("/refresh-token")
-    public ResponseEntity<?> validateToken(@RequestBody @Valid RefreshTokenRequest refreshTokenRequest) throws Exception {
-        final JwtResponse response = this.jwtService.refreshJwtToken(refreshTokenRequest);
-
-        return ResponseEntity.ok(response);
+  @PostMapping("/refresh-token")
+  public ResponseEntity<?> validateToken(@RequestBody @Valid RefreshTokenRequest refreshTokenRequest) throws Exception {
+    try{
+      final JwtResponse response = this.jwtService.refreshJwtToken(refreshTokenRequest);
+      return ResponseEntity.ok(response);
+    }catch(HttpClientErrorException err){
+      return ResponseEntity.status(err.getStatusCode()).body(err.getMessage());
     }
+  }
 
   @PostMapping("/signup")
   public ResponseEntity<?> registerUser(@RequestBody SignupRequest request) {

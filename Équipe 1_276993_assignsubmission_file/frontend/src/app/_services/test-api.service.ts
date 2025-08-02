@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from "../../environments/environment";
 
-const API_URL = `${environment.apiUrl}/api`;
+const API_URL = `${environment.apiUrl}/team1/api`;
 
 @Injectable({
   providedIn: 'root'
@@ -38,7 +38,7 @@ export class TestApiService {
     getElement(type: string, id: string): Observable<any> {
         return this.http.get<any>(`${API_URL}/testapi/${type}/${id}`);
     }
-    
+
     updateElement(type: string, id: string, data: any): Observable<any> {
         return this.http.put<any>(`${API_URL}/testapi/${type}/${id}`, data);
     }

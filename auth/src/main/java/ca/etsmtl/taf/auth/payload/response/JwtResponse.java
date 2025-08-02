@@ -7,6 +7,7 @@ import java.util.List;
 
 @Getter
 @Setter
+//@Data
 public class JwtResponse {
   private String token;
   private String refresh;

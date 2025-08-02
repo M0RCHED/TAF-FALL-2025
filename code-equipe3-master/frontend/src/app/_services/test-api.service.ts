@@ -12,7 +12,7 @@ import {TestResponseModel} from "../models/testResponseModel";
 })
 
 export class TestApiService {
-  REST_API: string = environment.apiUrl
+  REST_API: string = `${environment.apiUrl}/team3/api`
   constructor(private http: HttpClient) { }
 
   //execute tests one by one

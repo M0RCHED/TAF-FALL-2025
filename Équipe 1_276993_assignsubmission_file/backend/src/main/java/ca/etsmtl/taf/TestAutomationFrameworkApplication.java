@@ -14,8 +14,8 @@ import java.util.Optional;
 @EnableDiscoveryClient
 public class TestAutomationFrameworkApplication implements CommandLineRunner {
 
-    @Autowired
-    RoleRepository roleRepository;
+    /*@Autowired
+    RoleRepository roleRepository;*/
 
 	public static void main(String[] args) {
 		SpringApplication.run(TestAutomationFrameworkApplication.class, args);
@@ -24,12 +24,13 @@ public class TestAutomationFrameworkApplication implements CommandLineRunner {
 	// MES MODIFICATION DEBUT
 	 @Override
     public void run(String... args) {
-        System.out.println("Running startup script...");
+		System.out.println("Team 1 Services is Running!");
         // ✅ Place your script execution logic here
-        this.createRoles();
+        //this.createRoles();
     }
 
 	//Create roles if not exits
+	/*
 	private void createRoles(){
         Optional<Role> userRoleExist = roleRepository.findByName(ERole.ROLE_USER);
         if(userRoleExist.isEmpty()){
@@ -43,6 +44,7 @@ public class TestAutomationFrameworkApplication implements CommandLineRunner {
             roleRepository.save(toSave);
         }
 	}
+	*/
 	// MES MODIFICATION FIN
 
 }

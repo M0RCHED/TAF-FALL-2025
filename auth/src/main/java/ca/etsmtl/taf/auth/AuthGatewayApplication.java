@@ -4,17 +4,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import ca.etsmtl.taf.auth.repository.RoleRepository;
 import ca.etsmtl.taf.auth.entity.ERole;
 import ca.etsmtl.taf.auth.entity.Role;
 import java.util.Optional;
-
-import java.util.List;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @EnableDiscoveryClient
 @SpringBootApplication
+@EnableFeignClients
 @Log4j2
 public class AuthGatewayApplication implements CommandLineRunner {
 
@@ -47,4 +46,5 @@ public class AuthGatewayApplication implements CommandLineRunner {
             roleRepository.save(toSave);
         }
 	}
+
 }

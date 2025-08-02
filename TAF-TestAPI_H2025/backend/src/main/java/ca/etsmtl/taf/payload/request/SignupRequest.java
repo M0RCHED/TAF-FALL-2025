@@ -2,7 +2,9 @@ package ca.etsmtl.taf.payload.request;
 
 import java.util.Set;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 
 public class SignupRequest {
   @NotBlank

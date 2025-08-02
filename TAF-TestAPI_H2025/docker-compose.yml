@@ -15,7 +15,8 @@ services:
   frontend:
     image: ${REGISTRY_BASE}/lionel-test-team2-frontend:${BACKEND_VERSION}
     build:
-      context: ./frontend
+      context: ./
+      dockerfile: ./frontend/Dockerfile
   
   selenium:
     image: ${REGISTRY_BASE}/lionel-test-team2-selenium:${BACKEND_VERSION}

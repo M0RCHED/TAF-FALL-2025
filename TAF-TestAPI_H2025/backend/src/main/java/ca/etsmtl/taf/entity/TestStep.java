@@ -1,48 +1,36 @@
 package ca.etsmtl.taf.entity;
-
 import java.util.Date;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.annotation.Id;
 
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity
-@EntityListeners(AuditingEntityListener.class)
+@Document(collection = "t_test_step")
 @Getter
 @Setter
-@Table(name = "t_test_step")
 public class TestStep {
-	
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @ManyToOne
+    private String id;
+
+    @DBRef
     private TestCase testCase;
-    
+
     private String name;
     private String description;
-	
-	@Column(name = "created_date", nullable = false, updatable = false)
+
     @CreatedDate
     private Date createdDate;
-	
-	@Column(name = "created_by")
+
     @CreatedBy
     private String createdBy;
-    
-	// Statut : En cours, Succès, Échec, Pas commencé.
+
+    // Statut a venir : En cours, Succes, Echec, Pas commence.
+    private StepStatus status;
 
 }

@@ -1,5 +1,5 @@
 package ca.etsmtl.taf.payload.request;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import java.util.Map;
 
 public class TestApiRequest {

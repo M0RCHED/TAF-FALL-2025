@@ -15,7 +15,7 @@
 ```ts
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { AuthService } from './auth.service';
+import { AuthService } from './user.service';
 import { environment } from '../../environments/environment';
 
 /**
@@ -715,7 +715,7 @@ describe('TokenStorageService', () => {
   it('devrait enregistrer le token dans le sessionStorage lors de l\'appel de saveToken', () => {
     const token = 'test-token';
     service.saveToken(token);
-    expect(window.sessionStorage.getItem('auth-token')).toBe(token);
+    expect(window.sessionStorage.getItem('user-token')).toBe(token);
   });
 
   /**
@@ -727,7 +727,7 @@ describe('TokenStorageService', () => {
     const newToken = 'new-token';
     service.saveToken(oldToken);
     service.saveToken(newToken);
-    expect(window.sessionStorage.getItem('auth-token')).toBe(newToken);
+    expect(window.sessionStorage.getItem('user-token')).toBe(newToken);
   });
 
   /**
@@ -736,7 +736,7 @@ describe('TokenStorageService', () => {
    */
   it('devrait retourner le token enregistré dans le sessionStorage lors de l\'appel de getToken', () => {
     const token = 'test-token';
-    window.sessionStorage.setItem('auth-token', token);
+    window.sessionStorage.setItem('user-token', token);
     expect(service.getToken()).toBe(token);
   });
 
@@ -755,7 +755,7 @@ describe('TokenStorageService', () => {
   it('devrait enregistrer l\'utilisateur dans le sessionStorage lors de l\'appel de saveUser', () => {
     const user = { username: 'test-user' };
     service.saveUser(user);
-    expect(window.sessionStorage.getItem('auth-user')).toBe(JSON.stringify(user));
+    expect(window.sessionStorage.getItem('user-user')).toBe(JSON.stringify(user));
   });
 
   /**
@@ -767,7 +767,7 @@ describe('TokenStorageService', () => {
     const newUser = { username: 'new-user' };
     service.saveUser(oldUser);
     service.saveUser(newUser);
-    expect(window.sessionStorage.getItem('auth-user')).toBe(JSON.stringify(newUser));
+    expect(window.sessionStorage.getItem('user-user')).toBe(JSON.stringify(newUser));
   });
 
   /**
@@ -776,7 +776,7 @@ describe('TokenStorageService', () => {
    */
   it('devrait retourner l\'utilisateur enregistré dans le sessionStorage lors de l\'appel de getUser', () => {
     const user = { username: 'test-user' };
-    window.sessionStorage.setItem('auth-user', JSON.stringify(user));
+    window.sessionStorage.setItem('user-user', JSON.stringify(user));
     expect(service.getUser()).toEqual(user);
   });
 

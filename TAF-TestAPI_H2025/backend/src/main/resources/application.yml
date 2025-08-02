@@ -1,11 +1,4 @@
 spring:
-  main:
-    web-application-type: servlet
-  #  web-application-type: reactive
-  #  allow-bean-definition-overriding: true
-  #main:
-  #  web-application-type: reactive
-
   application:
     name: team2
 
@@ -13,30 +6,26 @@ spring:
     compatibility-verifier:
       enabled: false
 
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+  data:
+    mongodb:
+      uri: ${DB_URI}
+      authentication-database: ${DB_AUTH}
+      database: ${DB_NAME}
+      auto-index-creation: true
+
   jpa:
-    defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
-      dialect : ${SPRING_JPA_PROPERTIES_HIBERNETE_DIALECT}
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+
   messages:
     basename: validation
     encoding: ISO-8859-1
-  sql:
-    init:
-      mode: always
-      platform: mysql
+
 taf:
   app:
     jwtSecret: ${JWT_SECRET}
-    jwtExpirationMs: 86400000
+    jwtExpirationMs: ${JWT_EXPIRES}
     testAPI_url: ${TEST_API_SERVICE_URL}
     testAPI_port: ${TEST_API_SERVICE_PORT}
     selenium_container_url: ${SELENIUM_URL}
@@ -44,6 +33,9 @@ taf:
 
 server:
   port: 8080
+  error:
+    whitelabel:
+      enabled: false
 
 eureka:
   instance:
@@ -58,7 +50,6 @@ eureka:
 
 springdoc:
   api-docs:
-    enabled: true
     path: /api-docs
 
   swagger-ui:

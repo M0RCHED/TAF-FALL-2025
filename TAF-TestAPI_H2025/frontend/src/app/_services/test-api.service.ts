@@ -12,7 +12,7 @@ import {TestResponseModel} from "../models/testResponseModel";
 })
 
 export class TestApiService {
-  REST_API: string = environment.apiUrl
+  REST_API: string = `${environment.apiUrl}/team2/api`;
   constructor(private http: HttpClient) { }
 
   executeTests(dataTests: testModel2[]): Observable<TestResponseModel[]> {
@@ -22,11 +22,11 @@ export class TestApiService {
           ...test,
           headers: typeof test.headers === 'object' ? test.headers : JSON.parse(test.headers || '{}')
         };
-  
+
         console.log('Payload envoyé:', sanitizedTest); // Vérifie ce qui est envoyé
-  
+
         return this.http.post<TestResponseModel>(
-          `${this.REST_API}/microservice/testapi/checkApi`, 
+          `${this.REST_API}/microservice/testapi/checkApi`,
           sanitizedTest,
           { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) }
         ).pipe(
@@ -35,16 +35,16 @@ export class TestApiService {
       })
     );
   }
-  
-  
-  
+
+
+
   private handleError(error: HttpErrorResponse) {
     console.error('Erreur détectée:', error);
     console.error('Réponse du serveur:', error.error);
     return throwError(() => new Error(error.error?.message || 'Une erreur est survenue lors de l\'exécution des tests.'));
   }
-  
-  
+
+
 
 //to refresh automatically the tests's  list
   private testsSubject: BehaviorSubject<testModel2[]> = new BehaviorSubject<testModel2[]>([]);

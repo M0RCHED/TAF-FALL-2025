@@ -1,7 +1,7 @@
 services:
   auth:
     image: ${REGISTRY_BASE}/lionel-test-auth:${AUTH_VERSION}
-    container_name: lionel-test-auth
+    container_name: lionel-test-user
     depends_on:
       - registry
       - mongodb

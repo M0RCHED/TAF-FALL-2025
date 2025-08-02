@@ -4,19 +4,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
-@Component
+@Service
 public class EurekaItem {
-    private final DiscoveryClient discoveryClient;
 
-  @Autowired
-  public EurekaItem(DiscoveryClient discoveryClient) {
-    this.discoveryClient = discoveryClient;
-  }
+   @Autowired
+   private DiscoveryClient discoveryClient;
 
 	public void test() throws Exception {
 		List<String> list = discoveryClient.getServices();

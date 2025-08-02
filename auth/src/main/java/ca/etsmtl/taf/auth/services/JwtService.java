@@ -1,22 +1,33 @@
 package ca.etsmtl.taf.auth.services;
 
+import ca.etsmtl.taf.auth.entity.User;
 import ca.etsmtl.taf.auth.jwt.JwtUtil;
 import ca.etsmtl.taf.auth.model.CustomUserDetails;
 import ca.etsmtl.taf.auth.payload.request.LoginRequest;
 import ca.etsmtl.taf.auth.payload.request.RefreshTokenRequest;
+import ca.etsmtl.taf.auth.payload.request.ValidateTokenRequest;
 import ca.etsmtl.taf.auth.payload.response.JwtResponse;
+import io.jsonwebtoken.JwtException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import java.util.List;
+import lombok.extern.log4j.Log4j2;
 
 @Service
+@Log4j2
 public class JwtService {
 
     @Autowired
@@ -28,7 +39,15 @@ public class JwtService {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    UserClient userClient;
+
     public JwtResponse createJwtToken(LoginRequest authenticationRequest) throws Exception {
+        //System.out.println("1:: Try Connection from " + authenticationRequest.getUsername() + " / " + authenticationRequest.getPassword() + " / " + passwordEncoder.encode(authenticationRequest.getPassword()));
+        // this.log.debug("1:: Try Connection from {} / {} / {}", authenticationRequest.getUsername(), authenticationRequest.getPassword(), passwordEncoder.encode(authenticationRequest.getPassword()));
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 authenticationRequest.getUsername(), authenticationRequest.getPassword()));
 
@@ -44,6 +63,7 @@ public class JwtService {
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
+
         return new JwtResponse(token,
                 refresh,
                 userDetails.getId(),
@@ -53,33 +73,50 @@ public class JwtService {
                 roles);
     }
 
-
-    public JwtResponse refreshJwtToken(RefreshTokenRequest RrfreshTokenRequest) throws Exception {
-        String jwt = RrfreshTokenRequest.getRefreshToken();
-        if (jwt.startsWith("Bearer ")) {
-            jwt = jwt.substring(7);
+    public boolean validateJwtToken(ValidateTokenRequest validateTokenRequest) throws Exception {
+        try{
+            return jwtUtil.validateToken(validateTokenRequest.getToken());
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
         }
-        String username = jwtUtil.extractUsername(jwt);
+    }
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+    /**
+     *
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    public JwtResponse refreshJwtToken(RefreshTokenRequest request) throws HttpClientErrorException {
+        String oldRefreshToken = request.getRefreshToken();
+
+        if (oldRefreshToken.startsWith("Bearer ")) {
+            oldRefreshToken = oldRefreshToken.substring(7);
+        }
+
+        if (!jwtUtil.validateToken(oldRefreshToken)) {
+            throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+        }
+        String username = jwtUtil.extractUsername(oldRefreshToken);
+        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(username);
+
 
         if(userDetails != null){
-            final String token = jwtUtil.generateToken(RrfreshTokenRequest);
-        }else{
-           return null;
+            // Optional: Check if token is in DB and hasn't been used
+            // If valid, generate new tokens
+            String newAccessToken = jwtUtil.generateToken(userDetails);
+            String newRefreshToken = jwtUtil.generateToken(userDetails);
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(item -> item.getAuthority())
+                    .collect(Collectors.toList());
+            return new JwtResponse(newAccessToken,
+                    newRefreshToken,
+                    userDetails.getId(),
+                    userDetails.getFullName(),
+                    userDetails.getUsername(),
+                    userDetails.getEmail(),
+                    roles);
         }
-        //final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
-        final String token = jwtUtil.generateToken(RrfreshTokenRequest);
-
-
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
-        return new JwtResponse(token,
-                userDetails.getId(),
-                userDetails.getFullName(),
-                userDetails.getUsername(),
-                userDetails.getEmail(),
-                roles);
+        return null;
     }
 }

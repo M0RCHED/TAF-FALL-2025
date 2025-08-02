@@ -68,9 +68,9 @@ jobs:
           cache: yarn
           cache-dependency-path: pulumi/google-cloud/yarn.lock
       - run: yarn --cwd pulumi/google-cloud install
-      - id: 'auth'
+      - id: 'user'
         name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v0'
+        uses: 'google-github-actions/user@v0'
         with:
           credentials_json: '${{ secrets.GCP_GITHUB_SA_KEY }}'
       - id: pulumi

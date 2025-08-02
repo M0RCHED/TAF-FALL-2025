@@ -1,41 +1,28 @@
 package ca.etsmtl.taf.entity;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "roles", indexes = {
-        @Index(name = "uniqueRoleName", columnList = "name", unique = true)
-})
+@Document(collection = "roles")
 public class Role {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
 
-  @Enumerated(EnumType.STRING)
-  @Column(length = 20)
+  @Id
+  private String id;
+
+  @Indexed(unique = true)
   private ERole name;
 
-  public Role() {
-
-  }
+  public Role() {}
 
   public Role(ERole name) {
     this.name = name;
   }
 
-  public Integer getId() {
+  public String getId() {
     return id;
   }
 
-  public void setId(Integer id) {
+  public void setId(String id) {
     this.id = id;
   }
 

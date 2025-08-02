@@ -23,6 +23,10 @@ spring:
       ddl-auto: update
     show-sql: true
 
+feign:
+  okhttp:
+    enabled: true
+
 taf:
   app:
     jwtSecret: ${API_TEST_TOKEN}
@@ -45,3 +49,17 @@ springdoc:
 
   swagger-ui:
     path:  /swagger-ui.html
+
+logging:
+  level:
+    root: ${LOG_ROOT}
+    org.springframework.web: ${LOG_WEB}
+    org.hibernate: ${LOG_HIBERNATE}
+    org.springframework: ${LOG_FRAMEWORK}
+
+#endpoints:
+#  cors:
+#    allowed-origins: "*"
+#    allowed-methods: "*"
+#    allowed-headers: "*"
+#    allow-credentials: true

@@ -51,13 +51,14 @@ tasks.named('test') {
 bootRun{
 	workingDir("..")
 	environment = [
-       // EUREKA_HOST: "185.133.251.89",
-		EUREKA_HOST: "localhost",
+        EUREKA_HOST: "185.133.251.89",
+		//EUREKA_HOST: "localhost",
         EUREKA_PORT: "8761",
         EUREKA_USERNAME: "eureka",
         EUREKA_PASSWORD: "eureka",
         PORT_GATEWAY: "8080",
         HOSTNAME: "185.133.251.89",
         CONTAINER_IP: "localhost",
+        ALLOWED_ORIGINS: "http://localhost:4200,http://localhost:58413,http://localhost:57500"
 	]
 }

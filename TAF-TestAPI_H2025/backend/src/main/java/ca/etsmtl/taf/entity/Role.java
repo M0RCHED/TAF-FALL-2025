@@ -1,41 +1,28 @@
 package ca.etsmtl.taf.entity;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Table;
-
-@Entity
-@Table(name = "roles", indexes = {
-        @Index(name = "uniqueRoleName", columnList = "name", unique = true)
-})
+@Document(collection = "roles")
 public class Role {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
 
-  @Enumerated(EnumType.STRING)
-  @Column(length = 20)
+  @Id
+  private String id; // MongoDB utilise souvent String ou ObjectId
+
+  @Indexed(unique = true)
   private ERole name;
 
-  public Role() {
-
-  }
+  public Role() {}
 
   public Role(ERole name) {
     this.name = name;
   }
 
-  public Integer getId() {
+  public String getId() {
     return id;
   }
 
-  public void setId(Integer id) {
+  public void setId(String id) {
     this.id = id;
   }
 
