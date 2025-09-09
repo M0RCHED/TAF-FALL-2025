@@ -1,0 +1,69 @@
+.container {
+    margin: 20px auto;
+    max-width: 1200px;
+  }
+  
+  .jumbotron {
+    padding: 20px;
+    background-color: #f8f9fa;
+  }
+  
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  
+  .filters label {
+    margin-right: 5px;
+  }
+  
+  .filters select,
+  .filters input[type="date"] {
+    margin-right: 20px;
+    padding: 5px;
+  }
+  
+  .kpis {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+  }
+  
+  .kpis p {
+    font-size: 1.2em;
+    font-weight: bold;
+  }
+  
+  .table {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  .charts {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .chart-container {
+    display: flex;
+    flex-direction: row;
+    width: 500px;
+  }
+  
+  .text-success {
+    color: green;
+  }
+  
+  .text-danger {
+    color: red;
+  }
+  
+  .text-warning {
+    color: orange;
+  }
+  
