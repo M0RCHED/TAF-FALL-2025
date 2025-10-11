@@ -11,13 +11,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-@JsonAutoDetect(                     // <<< force Jackson à lire les CHAMPS
+
+@JsonAutoDetect(                     // <<< force Jackson à lire les CHAMPs add by Takiyeddin Gherras
         fieldVisibility = JsonAutoDetect.Visibility.ANY,
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE
 )
 @JsonIgnoreProperties({"hibernateLazyInitializer","handler"}) // <<< évite le bruit Hibernate
-
 
 
 @Entity
