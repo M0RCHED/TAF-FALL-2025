@@ -9,11 +9,13 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/test") // préfixe clair
 public class TestController {
 
     private final TestRepository testRepository;
+    Instant now = Instant.now();
 
     public TestController(TestRepository testRepository) {
         this.testRepository = testRepository;
@@ -42,11 +44,13 @@ public class TestController {
         testRepository.findAll().forEach(t -> {
             var ti = new ReportDTO.TestItem();
             ti.id = t.getId();
-            ti.tool = "jmeter";              // provisoire: valeur par défaut
+            ti.tool = new String[]{"JMeter","Selenium","REST Assured","Gatling"}[(int)(Math.random()*4)];              // provisoire: valeur par défaut
             ti.feature = "General";          // provisoire
             ti.scenario = t.getName();       // mappe name -> scenario
             ti.status = normalizeStatus(t.getStatus());
-            ti.durationMs = 0;               // si pas de durée en DB
+            ti.durationMs = 500;
+            ti.executedBy = "Taki";            // TODO: utilisateur réel/CI
+            ti.executedAt = now.toString();// si pas de durée en DB
             items.add(ti);
         });
 
@@ -61,6 +65,7 @@ public class TestController {
         r.stats.failed = (int) items.stream().filter(i -> "failed".equals(i.status)).count();
         r.stats.skipped = (int) items.stream().filter(i -> "skipped".equals(i.status)).count();
         r.stats.durationMs = 0;
+
 
         r.tests = items;
         return r;
