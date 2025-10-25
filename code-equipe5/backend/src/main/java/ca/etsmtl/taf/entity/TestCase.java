@@ -1,53 +1,133 @@
 package ca.etsmtl.taf.entity;
 
-import java.util.Date;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.Map;
+import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.time.Instant;
 
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import lombok.Getter;
-import lombok.Setter;
-
-@Entity
-@EntityListeners(AuditingEntityListener.class)
-@Getter
-@Setter
-@Table(name = "t_test_case")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Document(collection = "test_cases") // Nom de la collection MongoDB
 public class TestCase {
-	
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @ManyToOne
-    private TestSuite testSuite;
-    
-    @ManyToOne
-    private TestPlan testPlan;
-    
-    private String name;
-    
-    private String description;
-	
-	@Column(name = "created_date", nullable = false, updatable = false)
-    @CreatedDate
-    private Date createdDate;
-	
-	@Column(name = "created_by")
-    @CreatedBy
-    private String createdBy;
-    
-	// Priorité ?
-	// Statut : En cours, Succès, Échec, Pas commencé.
 
+    @Id
+    private String id; // Mappé à partir de "_id"
+
+    private String runId; // La "clé étrangère" vers le TestRun
+    private String project;
+    private String suite;
+    private String type;
+    private String tool;
+    private String name;
+    private String status;
+    private String executedBy;
+    private Instant executedAt;
+    private long durationMs;
+
+    @JsonProperty("env")
+    private CaseEnvironment environment;
+
+    private List<TestStep> steps;
+
+    @JsonProperty("metrics")
+    private CaseMetrics caseMetrics;
+
+    private List<Requirement> requirements;
+    private List<Defect> defects;
+
+    @JsonProperty("links")
+    private CaseLinks caseLinks;
+
+    @JsonProperty("error")
+    private ErrorDetails errorDetails;
+}
+
+// --- Classes imbriquées pour TestCase ---
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+class CaseEnvironment {
+    private String os;
+    private String browser;
+    private String resolution;
+}
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL) // N'inclut pas les champs nuls (comme "error")
+class TestStep {
+    private String name;
+    private String status;
+    private long durationMs;
+    private String error; // Sera null si "status" est "passed"
+}
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL) // Les champs api, ui, perf seront souvent nuls
+class CaseMetrics {
+    private ApiMetrics api;
+    private UiMetrics ui;
+    private PerformanceMetrics performance; // Réutilisation de la classe de TestRun
+}
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+class ApiMetrics {
+    private String method;
+    private String url;
+    private int statusCode;
+    private int latencyMs;
+}
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+class UiMetrics {
+    private int actionsCount;
+    private List<String> screenshots;
+}
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+class Requirement {
+    private String id;
+    private String status;
+}
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+class Defect {
+    private String id;
+    private String status;
+}
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+class CaseLinks {
+    private String reportUrl;
+    private String artifactUrl;
+}
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+class ErrorDetails {
+    private String message;
+    private String stack;
 }
