@@ -30,6 +30,9 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 @CrossOrigin(origins = { "http://localhost:4200", "http://localhost:5173" }) // Front Angular/React en dev
 public class DashboardController {
 
+    private static final String COL_RUNS  = "test_runs";
+    private static final String COL_CASES = "test_cases";
+
     private final MongoTemplate mongo;
 
     public DashboardController(MongoTemplate mongoTemplate) {
@@ -52,29 +55,36 @@ public class DashboardController {
         q.with(Sort.by(Sort.Direction.DESC, "createdAt"));
         q.limit(Math.max(1, Math.min(limit, 50)));
         // projection légère -> idéal pour “cards”
-        q.fields().include("project.key").include("pipeline.runId")
-                .include("run.status").include("run.stats").include("createdAt");
+        q.fields()
+                .include("project.key")
+                .include("pipeline.runId")
+                .include("run.status")
+                .include("run.stats")
+                .include("createdAt");
 
-//        return mongo.find(q, Map.class, "test_runs");
-        return cast(mongo.find(q, Map.class, "test_runs"));
+        return cast(mongo.find(q, Map.class, COL_RUNS));
     }
 
     // ---------- B) Détail d’un run ----------
     // ex: /dashboard/report/run/gha-2025-10-19-0012
     @GetMapping("/report/run/{runId}")
     public ResponseEntity<?> runById(@PathVariable String runId) {
-        Map<?,?> run = mongo.findOne(Query.query(Criteria.where("pipeline.runId").is(runId)), Map.class, "test_runs");
+        Map<?,?> run = mongo.findOne(
+                Query.query(Criteria.where("pipeline.runId").is(runId)),
+                Map.class, COL_RUNS
+        );
         if (run != null) return ResponseEntity.ok(run);
 
         // Fallback: recompose à partir des test_cases si test_runs absent
         List<Map> cases = mongo.find(
                 Query.query(Criteria.where("runId").is(runId))
                         .with(Sort.by(Sort.Direction.ASC, "executedAt")),
-                Map.class, "test_cases");
+                Map.class, COL_CASES
+        );
 
         if (cases == null || cases.isEmpty()) return ResponseEntity.notFound().build();
 
-        long total = cases.size();
+        long total  = cases.size();
         long failed = cases.stream().filter(c -> "failed".equals(String.valueOf(c.get("status")))).count();
         long passed = total - failed;
 
@@ -101,6 +111,9 @@ public class DashboardController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
+        page = Math.max(page, 0);
+        size = Math.min(Math.max(size, 1), 100);
+
         List<Criteria> cs = new ArrayList<>();
         cs.add(Criteria.where("project").is(project));
         if (type   != null && !type.isBlank())   cs.add(Criteria.where("type").is(type));
@@ -116,17 +129,17 @@ public class DashboardController {
         }
 
         Criteria matchCrit = new Criteria().andOperator(cs.toArray(new Criteria[0]));
-        int skipN = Math.max(0, page) * Math.max(1, size);
+        int skipN = page * size;
 
         Aggregation agg = newAggregation(
                 match(matchCrit),
                 sort(Sort.by(Sort.Direction.DESC, "executedAt")),
                 skip(skipN),
-                limit(Math.min(size, 100))
+                limit(size)
         );
 
-        List<Map> items = mongo.aggregate(agg, "test_cases", Map.class).getMappedResults();
-        long total = mongo.count(Query.query(matchCrit), "test_cases");
+        List<Map> items = mongo.aggregate(agg, COL_CASES, Map.class).getMappedResults();
+        long total = mongo.count(Query.query(matchCrit), COL_CASES);
 
         Map<String,Object> out = new LinkedHashMap<>();
         out.put("page", page);
@@ -143,21 +156,25 @@ public class DashboardController {
             @RequestParam String project,
             @RequestParam(defaultValue = "14") int days) {
 
-        Instant from = LocalDate.now(ZoneOffset.UTC).minusDays(days).atStartOfDay().toInstant(ZoneOffset.UTC);
+        int win = (days <= 0 || days > 365) ? 14 : days;
+        Instant from = LocalDate.now(ZoneOffset.UTC)
+                .minusDays(win - 1L)
+                .atStartOfDay()
+                .toInstant(ZoneOffset.UTC);
 
         // 1) préférer test_runs si existant
         try {
             Aggregation agg = newAggregation(
                     match(Criteria.where("project.key").is(project).and("createdAt").gte(from)),
-                    project("status")
+                    project()
                             .andExpression("dateToString('%Y-%m-%d', $createdAt)").as("day")
-                            .and("$run.status").as("status"),
+                            .and("run.status").as("status"),
                     group("day")
                             .sum(ConditionalOperators.when(Criteria.where("status").is("passed")).then(1).otherwise(0)).as("passed")
                             .count().as("total"),
                     sort(Sort.by("day").ascending())
             );
-            List<Map> res = mongo.aggregate(agg, "test_runs", Map.class).getMappedResults();
+            List<Map> res = mongo.aggregate(agg, COL_RUNS, Map.class).getMappedResults();
             if (!res.isEmpty()) return cast(res);
         } catch (Exception ignore) {}
 
@@ -167,7 +184,7 @@ public class DashboardController {
                 group("runId")
                         .sum(ConditionalOperators.when(Criteria.where("status").is("failed")).then(1).otherwise(0)).as("failed")
                         .first("executedAt").as("anyTime"),
-                project("day", "status")
+                project()
                         .andExpression("dateToString('%Y-%m-%d', $anyTime)").as("day")
                         .and(ConditionalOperators.when(
                                         ComparisonOperators.Gt.valueOf("$failed").greaterThanValue(0))
@@ -178,7 +195,7 @@ public class DashboardController {
                 sort(Sort.by("day").ascending())
         );
 
-        List<Map> res2 = mongo.aggregate(agg2, "test_cases", Map.class).getMappedResults();
+        List<Map> res2 = mongo.aggregate(agg2, COL_CASES, Map.class).getMappedResults();
         return cast(res2);
     }
 
