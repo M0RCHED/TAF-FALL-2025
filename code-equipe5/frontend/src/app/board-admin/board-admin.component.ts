@@ -1,165 +1,131 @@
-import { Component, OnInit } from '@angular/core';
-import { BoardAdminService, TestResult } from './board-admin.service';
-import { Chart } from 'chart.js/auto';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { ReportService } from '../_services/report.service';
+import { Report, TestItem, TestStatus } from '../models/report';
+import { ChartConfiguration, ChartType, ChartData } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
+
+type ToolFilter = 'Tous' | 'jmeter' | 'selenium' | 'gatling' | 'unknown';
+type StatusFilter = 'Tous' | 'passed' | 'failed' | 'skipped';
 
 @Component({
-  selector: 'app-board-admin',
+  selector: 'app-admin-board',
   templateUrl: './board-admin.component.html',
   styleUrls: ['./board-admin.component.css']
 })
-export class BoardAdminComponent implements OnInit {
-  // Propriétés pour les filtres
-  selectedTool: string = 'Tous';
-  selectedStatus: string = 'Tous';
-  selectedDate: string = '';
-  selectedExecutedBy: string = 'Tous';
+export class AdminBoardComponent implements OnInit {
+  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
-  // Listes pour les options de filtre
-  tools: string[] = ['Tous', 'Selenium', 'Postman', 'Gatling', 'JMeter'];
-  statuses: string[] = ['Tous', 'passed', 'failed'];
-  executedBys: string[] = ['Tous', 'Thread Group 1-1']; // Ajustez selon vos données
+  pieChartType: 'doughnut' = 'doughnut';
+  pieChartData: ChartData<'doughnut'> = {
+    labels: ['Passed', 'Failed', 'Skipped'],
+    datasets: [{
+      data: [0, 0, 0],
+      backgroundColor: ['#28a745', '#dc3545', '#6c757d']
+    }],
+  };
+  pieChartOptions: ChartConfiguration<'doughnut'>['options'] = {
+    responsive: true,
+    plugins: { legend: { position: 'bottom' } },
+  };
 
-  // Données récupérées et filtrées
-  allTestResults: TestResult[] = [];
-  filteredTestResults: TestResult[] = [];
+  loading = true;
+  error: string | null = null;
 
-  // Variables pour les KPI
-  totalTests: number = 0;
-  passedPercentage: number = 0;
-  avgExecutionTime: string = '';
+  report: Report | null = null;
+  visible: TestItem[] = [];
 
-  // Graphiques
-  public doughnutChart: any;
-  public barChart: any;
+  // filtres UI
+  tool: ToolFilter = 'Tous';
+  status: StatusFilter = 'Tous';
+  date?: string;       // format "yyyy-MM-dd" depuis <input type="date">
+  userQuery = '';      // recherche sur executedBy + scenario
 
-  constructor(private boardAdminService: BoardAdminService) { }
+  tools: ToolFilter[] = ['Tous', 'jmeter', 'selenium', 'gatling', 'unknown'];
+  statuses: StatusFilter[] = ['Tous', 'passed', 'failed', 'skipped'];
+
+  total = 0;
+  passed = 0;
+  failed = 0;
+  skipped = 0;
+  successPct = 0;
+  avgMs = 0;
+
+  constructor(private api: ReportService) {}
 
   ngOnInit(): void {
-    // Récupération des données de l'API
-    this.boardAdminService.getResults().subscribe(data => {
-      console.log(data);
-      this.allTestResults = data; // Assigner directement `data` car c'est déjà un tableau
-      this.filteredTestResults = [...this.allTestResults];
-
-      // Extraire les valeurs uniques de `threadName` pour `executedBys`
-      this.executedBys = ['Tous', ...new Set(this.allTestResults.map(test => test.threadName))];
-
-      this.calculateKPI();
-      this.createDoughnutChart();
-      this.createBarChart();
-    });
-  }
-
-
-
-  // Méthode pour filtrer les résultats
-  // Méthode pour filtrer les résultats
-  // Méthode pour filtrer les résultats
-  filterResults() {
-    this.filteredTestResults = this.allTestResults.filter(test => {
-      const matchesTool = this.selectedTool === 'Tous' || test.tool === this.selectedTool;
-      const matchesStatus = this.selectedStatus === 'Tous' ||
-        (test.success ? 'passed' : 'failed') === this.selectedStatus;
-      const matchesExecutedBy = this.selectedExecutedBy === 'Tous' || test.threadName === this.selectedExecutedBy;
-      const matchesDate = !this.selectedDate || test.date.startsWith(this.selectedDate);
-
-      return matchesTool && matchesStatus && matchesExecutedBy && matchesDate;
-    });
-
-    console.log('Données filtrées :', this.filteredTestResults); // Vérifie les données filtrées ici
-    this.calculateKPI();
-    this.updateCharts();
-  }
-
-
-  // Méthode pour calculer les KPI
-  // Méthode pour calculer les KPI
-  calculateKPI() {
-    this.totalTests = this.filteredTestResults.length;
-
-    // Utiliser `test.success` directement comme booléen, sans comparer à une chaîne
-    const passedTests = this.filteredTestResults.filter(test => test.success).length;
-
-    // Calcul du pourcentage
-    this.passedPercentage = this.totalTests > 0
-      ? parseFloat(((passedTests / this.totalTests) * 100).toFixed(2))
-      : 0;
-
-    // Calcul du temps d'exécution moyen
-    const totalExecutionTime = this.filteredTestResults.reduce((acc, test) => acc + parseInt(test.elapsed), 0);
-    const avgTime = this.totalTests > 0 ? totalExecutionTime / this.totalTests : 0;
-    this.avgExecutionTime = avgTime >= 1000 ? `${(avgTime / 1000).toFixed(2)}s` : `${avgTime.toFixed(2)}ms`;
-  }
-
-
-  // Méthode pour créer le graphique Doughnut
-  createDoughnutChart() {
-    const passed = this.filteredTestResults.filter(test => test.success).length;
-    const failed = this.filteredTestResults.length - passed;
-
-    this.doughnutChart = new Chart("MyDoughnutChart", {
-      type: 'doughnut',
-      data: {
-        labels: ['Passed', 'Failed'],
-        datasets: [{
-          data: [passed, failed],
-          backgroundColor: ['green', 'red']
-        }]
+    this.api.getReport().subscribe({
+      next: (rep: any) => {
+        this.report = rep;
+        this.applyFilters();
+        this.loading = false;
       },
-      options: {
-        plugins: {
-          title: {
-            display: true,
-            text: 'Test Status Distribution'
-          }
-        }
+      error: (err: any) => {
+        this.error = 'Erreur de chargement du rapport';
+        console.error(err);
+        this.loading = false;
       }
     });
   }
 
+  applyFilters(): void {
+    if (!this.report) return;
 
-  // Méthode pour créer le graphique Bar
-  createBarChart() {
-    const selenium = this.filteredTestResults.filter(test => test.tool === 'Selenium').length;
-    const gatling = this.filteredTestResults.filter(test => test.tool === 'Gatling').length;
-    const jmeter = this.filteredTestResults.filter(test => test.tool === 'JMeter').length;
-    const postman = this.filteredTestResults.filter(test => test.tool === 'Postman').length;
+    let data = [...this.report.tests];
 
-    this.barChart = new Chart("MyBarChart", {
-      type: 'bar',
-      data: {
-        labels: ['Selenium', 'Gatling', 'JMeter', 'Postman'],
-        datasets: [{
-          data: [selenium, gatling, jmeter, postman],
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgb(54, 162, 235)',
-          borderWidth: 1
-        }]
-      },
-      options: {
-        plugins: {
-          title: {
-            display: true,
-            text: 'Tool Usage Distribution'
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
-      }
-    });
+    // filtre outil
+    if (this.tool !== 'Tous') {
+      data = data.filter(t => t.tool === this.tool);
+    }
+
+    // filtre statut
+    if (this.status !== 'Tous') {
+      data = data.filter(t => t.status === this.status);
+    }
+
+    // filtre utilisateur + recherche textuelle (executedBy OU scenario)
+    if (this.userQuery.trim()) {
+      const q = this.userQuery.trim().toLowerCase();
+      data = data.filter(t =>
+        (t.executedBy || '').toLowerCase().includes(q) ||
+        (t.scenario   || '').toLowerCase().includes(q)
+      );
+    }
+
+    // filtre date (match sur le début de l'ISO ex: "2025-10-12")
+    if (this.date) {
+      const day = this.date; // "yyyy-MM-dd"
+      data = data.filter(t => (t.executedAt ? t.executedAt.startsWith(day) : false));
+    }
+
+    this.visible = data;
+
+    // --- KPIs ---
+    this.total   = data.length;
+    this.passed  = data.filter(t => t.status === 'passed').length;
+    this.failed  = data.filter(t => t.status === 'failed').length;
+    this.skipped = data.filter(t => t.status === 'skipped').length;
+    this.successPct = this.total ? Math.round((this.passed / this.total) * 100) : 0;
+
+    const totalDur = data.reduce((s, t) => s + (t.durationMs || 0), 0);
+    this.avgMs = this.total ? Math.round(totalDur / this.total) : 0;
+
+    // --- MAJ graphique ---
+    this.pieChartData = {
+      labels: ['Passed', 'Failed', 'Skipped'],
+      datasets: [{
+        data: [this.passed, this.failed, this.skipped],
+        backgroundColor: ['#28a745', '#dc3545', '#6c757d']
+      }],
+    };
+
+    this.chart?.update();
   }
 
-
-
-  // Méthode pour mettre à jour les graphiques
-  updateCharts() {
-    if (this.doughnutChart) this.doughnutChart.destroy();
-    if (this.barChart) this.barChart.destroy();
-    this.createDoughnutChart();
-    this.createBarChart();
+  badgeClass(s: string) {
+    return {
+      'passed': 'badge bg-success',
+      'failed': 'badge bg-danger',
+      'skipped': 'badge bg-secondary'
+    }[s] || 'badge bg-secondary';
   }
-
 }
