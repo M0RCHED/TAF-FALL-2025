@@ -1,4 +1,6 @@
 
+
+
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
@@ -11,7 +13,7 @@ import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { HomeComponent } from './home/home.component';
 import { ProfileComponent } from './profile/profile.component';
-import {AdminBoardComponent} from './board-admin/board-admin.component';
+import {BoardAdminComponent} from './board-admin/board-admin.component';
 import { BoardUserComponent } from './board-user/board-user.component';
 
 import { authInterceptorProviders } from './_helpers/auth.interceptor';
@@ -30,6 +32,8 @@ import {MatCardModule} from "@angular/material/card";
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 
+import { CaseDetailDialogComponent } from '../app/board-admin/case-detail-dialog.component';
+
 import { TestSeleniumComponent } from './selenium/test-selenium.component';
 
 import { PerformanceTestApiModule } from './performance-test-api/performance-test-api.module';
@@ -42,6 +46,8 @@ import {BusyConfig, NgBusyModule} from 'ng-busy';
 import { NgChartsModule } from 'ng2-charts';
 
 
+
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -49,7 +55,7 @@ import { NgChartsModule } from 'ng2-charts';
     RegisterComponent,
     HomeComponent,
     ProfileComponent,
-    AdminBoardComponent,
+    BoardAdminComponent,
     BoardUserComponent,
     ProjectComponent,
     TestApiComponent,
@@ -59,6 +65,7 @@ import { NgChartsModule } from 'ng2-charts';
     PerformanceTestApiComponent,
     GatlingApiComponent,
     JmeterApiComponent,
+    CaseDetailDialogComponent,
 
   ],
 
@@ -79,12 +86,19 @@ import { NgChartsModule } from 'ng2-charts';
         MatInputModule,
         MatSelectModule,
         NgChartsModule,
+
         NgBusyModule.forRoot(new BusyConfig({
           message: 'Veuillez patienter',
         })),
-
     ],
   providers: [authInterceptorProviders],
   bootstrap: [AppComponent]
 })
+
+// @NgModule({
+//   imports: [BrowserModule, AppRoutingModule, HttpClientModule, FormsModule, NgChartsModule]
+// })
+
 export class AppModule { }
+
+

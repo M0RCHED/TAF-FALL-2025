@@ -1,0 +1,11 @@
+.content { color: #e6eaf2; background: #0f1220; }
+.row { display: grid; grid-template-columns: 120px 1fr; gap: 10px; padding: 6px 0; }
+.label { color: #a7b0c0; }
+.value { color: #fff; }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.block { margin-top: 12px; }
+.code { background: #0b0f1e; color: #d7e2ff; border: 1px solid #232a46; padding: 10px; border-radius: 10px; max-height: 220px; overflow: auto; }
+.code.error { color: #ffd1d1; border-color: rgba(239,68,68,.35); }
+.badge { border-radius: 999px; padding: 2px 8px; font-size: 12px; border: 1px solid rgba(255,255,255,.12); background: #0e1326; color: #fff; }
+.badge.pass { background: rgba(34,197,94,.15); color: #9ae6b4; border-color: rgba(34,197,94,.35); }
+.badge.fail { background: rgba(239,68,68,.15); color: #fecaca; border-color: rgba(239,68,68,.35); }

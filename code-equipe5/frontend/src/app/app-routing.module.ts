@@ -6,7 +6,7 @@ import { LoginComponent } from './login/login.component';
 import { HomeComponent } from './home/home.component';
 import { ProfileComponent } from './profile/profile.component';
 import { BoardUserComponent } from './board-user/board-user.component';
-import {AdminBoardComponent} from './board-admin/board-admin.component';
+import {BoardAdminComponent} from './board-admin/board-admin.component';
 import { JmeterComponent } from './jmeter/jmeter.component';
 import { GatlingComponent } from './gatling/gatling.component';
 import { TestApiComponent } from './interface-test-api/test-api/test-api.component';
@@ -24,7 +24,7 @@ const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   { path: 'profile', component: ProfileComponent },
   { path: 'user', component: BoardUserComponent },
-  { path: 'admin', component: AdminBoardComponent },
+  { path: 'admin', component: BoardAdminComponent },
   { path : 'jmeter', component: JmeterComponent },
   { path : 'gatling', component: GatlingComponent },
   { path: 'test-api', component: TestApiComponent },

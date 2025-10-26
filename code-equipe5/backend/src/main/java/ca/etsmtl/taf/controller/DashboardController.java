@@ -13,9 +13,11 @@ import java.util.Map;
 public class DashboardController {
 
     private final DashboardService service;
+    private final DashboardService dashboardService;
 
-    public DashboardController(DashboardService service) {
+    public DashboardController(DashboardService service, DashboardService dashboardService) {
         this.service = service;
+        this.dashboardService = dashboardService;
     }
 
     @GetMapping("/report")
@@ -51,4 +53,59 @@ public class DashboardController {
             @RequestParam(defaultValue = "14") int days) {
         return service.passrate(project, days);
     }
+
+
+    @GetMapping("/summary/by-tool")
+    public List<ToolStatDto> byTool(
+            @RequestParam String project,
+            @RequestParam(defaultValue = "30") int days) {
+        return dashboardService.statsByTool(project, days);
+    }
+
+    @GetMapping("/summary/top-fails")
+    public List<NamedCountDto> topFails(
+            @RequestParam String project,
+            @RequestParam(defaultValue = "30") int days,
+            @RequestParam(defaultValue = "5") int limit) {
+        return dashboardService.topFailingTests(project, days, limit);
+    }
+
+    @GetMapping("/summary/flaky")
+    public List<NamedCountDto> flaky(
+            @RequestParam String project,
+            @RequestParam(defaultValue = "30") int days,
+            @RequestParam(defaultValue = "5") int limit) {
+        return dashboardService.flakyTests(project, days, limit);
+    }
+
+
+    @GetMapping("/dashboard/summary/tool-passrate")
+    public List<ToolRateDto> toolPassrate(
+            @RequestParam String project,
+            @RequestParam(required = false, defaultValue = "30") int days
+    ) {
+        return dashboardService.passrateByTool(project, days);
+    }
+
+
+    @GetMapping("/summary/by-type")
+    public List<Map> byType(
+            @RequestParam String project,
+            @RequestParam(defaultValue = "30") int days,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String tool
+    ) {
+        return dashboardService.passrateByType(project, days, status, tool);
+    }
+
+    @GetMapping("/summary/avg-duration")
+    public List<Map> avgDuration(
+            @RequestParam String project,
+            @RequestParam(defaultValue = "30") int days,
+            @RequestParam(required = false) String tool
+    ) {
+        return dashboardService.avgDuration(project, days, tool);
+    }
+
+
 }

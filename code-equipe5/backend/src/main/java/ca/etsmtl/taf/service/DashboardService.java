@@ -288,4 +288,214 @@ public class DashboardService {
         }
         return out;
     }
+
+//    -------  update for mor graphs  -------
+
+    // ---- E) breakdown par outil (test_cases) ----
+    public java.util.List<ToolStatDto> statsByTool(String project, int days) {
+        int win = (days <= 0 || days > 365) ? 30 : days;
+        java.time.Instant from = java.time.LocalDate.now(java.time.ZoneOffset.UTC)
+                .minusDays(win - 1L).atStartOfDay().toInstant(java.time.ZoneOffset.UTC);
+
+        Aggregation agg = newAggregation(
+                match(Criteria.where("project").is(project).and("executedAt").gte(java.util.Date.from(from))),
+                group("tool")
+                        .count().as("total")
+                        .sum(ConditionalOperators.when(Criteria.where("status").is("passed")).then(1).otherwise(0)).as("passed"),
+                project()
+                        .and("_id").as("tool")
+                        .and("total").as("total")
+                        .and("passed").as("passed")
+                        .and(ArithmeticOperators.Subtract.valueOf("total").subtract("passed")).as("failed"),
+                sort(Sort.by(Sort.Direction.DESC, "total"))
+        );
+        java.util.List<java.util.Map> rows = mongo.aggregate(agg, "test_cases", java.util.Map.class).getMappedResults();
+        java.util.List<ToolStatDto> out = new java.util.ArrayList<>();
+        for (java.util.Map r : rows) {
+            ToolStatDto d = new ToolStatDto();
+            d.tool   = String.valueOf(r.get("tool"));
+            d.total  = ((Number) r.get("total")).longValue();
+            d.passed = ((Number) r.get("passed")).longValue();
+            d.failed = ((Number) r.get("failed")).longValue();
+            out.add(d);
+        }
+        return out;
+    }
+
+    // ---- F) Top tests qui échouent (test_cases) ----
+    public java.util.List<NamedCountDto> topFailingTests(String project, int days, int limit) {
+        int win = (days <= 0 || days > 365) ? 30 : days;
+        int lim = Math.max(1, Math.min(limit, 50));
+        java.time.Instant from = java.time.LocalDate.now(java.time.ZoneOffset.UTC)
+                .minusDays(win - 1L).atStartOfDay().toInstant(java.time.ZoneOffset.UTC);
+
+        Aggregation agg = newAggregation(
+                match(Criteria.where("project").is(project)
+                        .and("executedAt").gte(java.util.Date.from(from))
+                        .and("status").is("failed")),
+                group("name")
+                        .count().as("fails")
+                        .first("tool").as("tool"),
+                sort(Sort.by(Sort.Direction.DESC, "fails")),
+                limit(lim),
+                project()
+                        .and("_id").as("name")
+                        .and("fails").as("count")
+                        .and("tool").as("tool")
+        );
+        java.util.List<java.util.Map> rows = mongo.aggregate(agg, "test_cases", java.util.Map.class).getMappedResults();
+        java.util.List<NamedCountDto> out = new java.util.ArrayList<>();
+        for (java.util.Map r : rows) {
+            NamedCountDto d = new NamedCountDto();
+            d.name  = String.valueOf(r.get("name"));
+            d.count = ((Number) r.get("count")).longValue();
+            d.tool  = r.get("tool") == null ? null : String.valueOf(r.get("tool"));
+            out.add(d);
+        }
+        return out;
+    }
+
+    // ---- G) Tests “flaky” : pass>0 et fail>0 (dans la fenêtre) ----
+    public java.util.List<NamedCountDto> flakyTests(String project, int days, int limit) {
+        int win = (days <= 0 || days > 365) ? 30 : days;
+        int lim = Math.max(1, Math.min(limit, 50));
+        java.time.Instant from = java.time.LocalDate.now(java.time.ZoneOffset.UTC)
+                .minusDays(win - 1L).atStartOfDay().toInstant(java.time.ZoneOffset.UTC);
+
+        Aggregation agg = newAggregation(
+                match(Criteria.where("project").is(project).and("executedAt").gte(java.util.Date.from(from))),
+                group("name")
+                        .count().as("total")
+                        .sum(ConditionalOperators.when(Criteria.where("status").is("passed")).then(1).otherwise(0)).as("passed")
+                        .first("tool").as("tool"),
+                match(new Criteria().andOperator(
+                        Criteria.where("passed").gt(0),
+                        Criteria.where("total").gt(0),
+                        Criteria.where("total").gt("passed") // donc il y a des fails
+                )),
+                project()
+                        .and("_id").as("name")
+                        .and(ArithmeticOperators.Subtract.valueOf("total").subtract("passed")).as("count") // nb de fails
+                        .and("tool").as("tool"),
+                sort(Sort.by(Sort.Direction.DESC, "count")),
+                limit(lim)
+        );
+        java.util.List<java.util.Map> rows = mongo.aggregate(agg, "test_cases", java.util.Map.class).getMappedResults();
+        java.util.List<NamedCountDto> out = new java.util.ArrayList<>();
+        for (java.util.Map r : rows) {
+            NamedCountDto d = new NamedCountDto();
+            d.name  = String.valueOf(r.get("name"));
+            d.count = ((Number) r.get("count")).longValue();
+            d.tool  = r.get("tool") == null ? null : String.valueOf(r.get("tool"));
+            out.add(d);
+        }
+        return out;
+    }
+
+
+
+
+//    ---------------------- taux de succès par type
+// ---------------------- taux de succès par type
+public List<Map> passrateByType(String project, int days, String status, String tool) {
+    Instant from = LocalDate.now(ZoneOffset.UTC)
+            .minusDays(days <= 0 ? 30 : days)
+            .atStartOfDay().toInstant(ZoneOffset.UTC);
+
+    List<Criteria> filters = new ArrayList<>();
+    filters.add(Criteria.where("project").is(project));
+    filters.add(Criteria.where("executedAt").gte(Date.from(from)));
+    if (status != null && !status.isBlank()) filters.add(Criteria.where("status").is(status));
+    if (tool != null && !tool.isBlank()) filters.add(Criteria.where("tool").is(tool));
+
+    Criteria match = new Criteria().andOperator(filters.toArray(new Criteria[0]));
+
+    Aggregation agg = newAggregation(
+            match(match),
+            group("type")
+                    .sum(ConditionalOperators.when(Criteria.where("status").is("passed"))
+                            .then(1).otherwise(0)).as("passed")
+                    .count().as("total"),
+            project("passed", "total").and("_id").as("type"),
+            sort(Sort.by(Sort.Direction.DESC, "type"))
+    );
+
+    // NOTE: Map.class → returns List<Map>
+    return mongo.aggregate(agg, "test_cases", Map.class).getMappedResults();
+}
+
+    // ---------------------- durée moyenne d’exécution
+    public List<Map> avgDuration(String project, int days, String tool) {
+        Instant from = LocalDate.now(ZoneOffset.UTC)
+                .minusDays(days <= 0 ? 30 : days)
+                .atStartOfDay().toInstant(ZoneOffset.UTC);
+
+        List<Criteria> filters = new ArrayList<>();
+        filters.add(Criteria.where("project.key").is(project));
+        filters.add(Criteria.where("createdAt").gte(Date.from(from)));
+        if (tool != null && !tool.isBlank()) filters.add(Criteria.where("run.tool").is(tool));
+
+        Criteria match = new Criteria().andOperator(filters.toArray(new Criteria[0]));
+
+        Aggregation agg = newAggregation(
+                match(match),
+                project()
+                        .and(DateOperators.DateToString.dateOf("createdAt").toString("%Y-%m-%d")).as("day")
+                        .and("$run.stats.durationMs").as("durationMs"),
+                group("day").avg("durationMs").as("avgDuration"),
+                sort(Sort.by("day").ascending())
+        );
+
+        // NOTE: Map.class → returns List<Map>
+        return mongo.aggregate(agg, "test_runs", Map.class).getMappedResults();
+    }
+
+
+//-------------------
+
+//    /summary/avg-duration → durée moyenne d’exécution
+
+
+
+
+
+    // ---- E) passrate par outil (sur N jours) ----
+    public java.util.List<ca.etsmtl.taf.dto.ToolRateDto> passrateByTool(String project, int days) {
+        int win = (days <= 0 || days > 365) ? 30 : days;
+        java.time.Instant from = java.time.LocalDate.now(java.time.ZoneOffset.UTC)
+                .minusDays(win - 1L)
+                .atStartOfDay()
+                .toInstant(java.time.ZoneOffset.UTC);
+
+        // executedAt peut être String -> on force la conversion en date
+        Aggregation agg = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("project").is(project)),
+                Aggregation.addFields().addField("execDate")
+                        .withValue(DateOperators.DateFromString.fromString("$executedAt")).build(),
+                Aggregation.match(Criteria.where("execDate").gte(java.util.Date.from(from))),
+                // on calcule sur les "cases" (tests) : passed/total par outil
+                Aggregation.group("tool")
+                        .sum(ConditionalOperators.when(Criteria.where("status").is("passed")).then(1).otherwise(0)).as("passed")
+                        .count().as("total"),
+                Aggregation.project()
+                        .and("_id").as("tool")
+                        .and("passed").as("passed")
+                        .and("total").as("total"),
+                Aggregation.sort(Sort.by(Sort.Direction.ASC, "tool"))
+        );
+
+        java.util.List<java.util.Map> rows = mongo.aggregate(agg, "test_cases", java.util.Map.class).getMappedResults();
+        java.util.List<ca.etsmtl.taf.dto.ToolRateDto> out = new java.util.ArrayList<>();
+        for (java.util.Map r : rows) {
+            String tool = r.get("tool") == null ? "unknown" : String.valueOf(r.get("tool"));
+            Number p = (Number) r.getOrDefault("passed", 0);
+            Number t = (Number) r.getOrDefault("total", 0);
+            out.add(new ca.etsmtl.taf.dto.ToolRateDto(tool, p.longValue(), t.longValue()));
+        }
+        return out;
+    }
+
+
+
+
 }

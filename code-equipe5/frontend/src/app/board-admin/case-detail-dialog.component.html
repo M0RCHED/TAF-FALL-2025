@@ -1,0 +1,57 @@
+<h3 mat-dialog-title>Détail du test</h3>
+
+<div mat-dialog-content class="content">
+  <div class="row">
+    <div class="label">Nom</div>
+    <div class="value ellipsis" [title]="data?.name">{{ data?.name }}</div>
+  </div>
+  <div class="row">
+    <div class="label">Run</div>
+    <div class="value">{{ data?.runId }}</div>
+  </div>
+  <div class="row">
+    <div class="label">Suite</div>
+    <div class="value">{{ data?.suite }}</div>
+  </div>
+  <div class="row">
+    <div class="label">Type</div>
+    <div class="value">{{ data?.type }}</div>
+  </div>
+  <div class="row">
+    <div class="label">Outil</div>
+    <div class="value">{{ data?.tool }}</div>
+  </div>
+  <div class="row">
+    <div class="label">Statut</div>
+    <div class="value">
+      <span class="badge" [class.pass]="data?.status==='passed'" [class.fail]="data?.status==='failed'">
+        {{ data?.status }}
+      </span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="label">Date</div>
+    <div class="value">{{ data?.executedAt | date:'medium' }}</div>
+  </div>
+
+  <div class="block" *ngIf="data?.expected || data?.actual">
+    <div class="label">Expected</div>
+    <pre class="code">{{ pretty(data?.expected) }}</pre>
+    <div class="label">Actual</div>
+    <pre class="code">{{ pretty(data?.actual) }}</pre>
+  </div>
+
+  <div class="block" *ngIf="data?.headers">
+    <div class="label">Headers</div>
+    <pre class="code">{{ pretty(data?.headers) }}</pre>
+  </div>
+
+  <div class="block" *ngIf="data?.error">
+    <div class="label">Erreur</div>
+    <pre class="code error">{{ pretty(data?.error) }}</pre>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Fermer</button>
+</div>
