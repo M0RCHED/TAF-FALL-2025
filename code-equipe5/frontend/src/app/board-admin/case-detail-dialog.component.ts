@@ -7,14 +7,20 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
   styleUrls: ['./case-detail-dialog.component.css']
 })
 export class CaseDetailDialogComponent {
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private ref: MatDialogRef<CaseDetailDialogComponent>
+    private dialogRef: MatDialogRef<CaseDetailDialogComponent>
   ) {}
 
-  close(): void { this.ref.close(); }
+  close(): void {
+    this.dialogRef.close();
+  }
 
-  pretty(obj: any): string {
-    try { return JSON.stringify(obj, null, 2); } catch { return String(obj ?? ''); }
+  get statusClass(): string {
+    const s = this.data?.status?.toLowerCase();
+    if (s === 'passed') return 'badge pass';
+    if (s === 'failed') return 'badge fail';
+    return 'badge';
   }
 }

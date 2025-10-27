@@ -1,18 +1,15 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { BoardAdminService } from './board-admin.service';
-import {
-  RunCard,
-  PassratePoint,
-  CaseSearchResponse,
-  ToolRate,
-  TypeStat,
-  NamedCount,
-  CaseItem,
-} from '../models/dashboard.model';
-
-import { ChartConfiguration, ChartOptions } from 'chart.js';
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Chart, ChartConfiguration, ChartOptions} from 'chart.js';
 import 'chart.js/auto';
 import { Subject, takeUntil } from 'rxjs';
+
+import {
+  RunCard, PassratePoint, CaseSearchResponse, CaseItem,
+  ToolRate, TypeRate, NamedCount
+} from '../models/dashboard.model';
+import { BoardAdminService } from './board-admin.service';
+import { MatDialog } from '@angular/material/dialog';
+import { CaseDetailDialogComponent } from './case-detail-dialog.component';
 
 type StatusFilter = 'all' | 'passed' | 'failed';
 type ToolFilter   = 'all' | 'gatling' | 'selenium' | 'restAssured' | 'other';
@@ -25,173 +22,168 @@ type ToolFilter   = 'all' | 'gatling' | 'selenium' | 'restAssured' | 'other';
 export class BoardAdminComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  // ====== état & données ======
+  // Etat UI
   loadingRuns = true;
   loadingRate = true;
   loadingCases = true;
+  loadingTool = true;
+  loadingType = true;
 
+  // Filtres
   project = 'TAF';
   days: 7 | 14 | 30 | 60 = 30;
-
-  // filtres
   fStatus: StatusFilter = 'all';
-  fTool: ToolFilter = 'all';
+  fTool: ToolFilter     = 'all';
 
-  // pagination
+  // Pagination
   page = 0;
-  size = 10;
+  size = 20;
 
+  // Données
   runs: RunCard[] = [];
   rate: PassratePoint[] = [];
-  casesResp: CaseSearchResponse | null = null;
+  casesResp: CaseSearchResponse = { page: 0, size: this.size, total: 0, items: [] };
 
-  // agrégats
+  toolRates: ToolRate[] = [];
+  typeRates: TypeRate[] = [];
+  topFails: NamedCount[] = [];
+  flaky: NamedCount[] = [];
+
+  // KPI
   totalRuns = 0;
   totalPassed = 0;
   passPct = 0;
 
-  // cartes additionnelles
-  toolRates: ToolRate[] = [];
-  typeStats: TypeStat[] = [];
-  topFails: NamedCount[] = [];
-  flaky: NamedCount[] = [];
+  /* Palette pour barres (5 couleurs distinctes) */
+  private barPalette = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4'];
+  // -------------
+
+
+
+
+
+
+
+
+
+
+  // -----------------------
 
   // ====== CHARTS ======
-  // Donut (aliasé en pie pour le template)
-  donutData: ChartConfiguration<'doughnut'>['data'] = {
-    labels: ['Passés', 'Échoués'],
-    datasets: [{ data: [0, 0], borderWidth: 0 }]
-  };
-  donutOptions: ChartOptions<'doughnut'> = {
-    responsive: true,
-    animation: { duration: 700, easing: 'easeOutQuart' },
-    plugins: { legend: { position: 'bottom' }, tooltip: { enabled: true } },
-    cutout: '65%'
-  };
-  // ALIAS demandés par le template
-  pieData = this.donutData as unknown as ChartConfiguration<'pie'>['data'];
-  pieOptions = this.donutOptions as ChartOptions<'pie'>;
 
-  // Courbe passrate
+  /** Donut Pass/Fail */
+
+  pieData: ChartConfiguration<'doughnut'>['data'] = {
+    labels: ['Passés', 'Échoués'],
+    datasets: [{ data: [0, 0], borderWidth: 0, backgroundColor: ['#2ecc71', '#e74c3c'] }]
+  };
+  pieOptions: ChartOptions<'doughnut'> = {
+    responsive: true,
+    cutout: '65%',
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { enabled: true }
+    },
+    animation: { duration: 600, easing: 'easeOutQuart' }
+
+
+  };
+
+
+
+
+  /** Line chart Passrate journalier */
   lineData: ChartConfiguration<'line'>['data'] = {
     labels: [],
-    datasets: [{
-      label: 'Passrate (%)',
-      data: [],
-      tension: 0.35,
-      pointRadius: 3,
-      pointHoverRadius: 6,
-      fill: false
-    }]
+    datasets: [{ label: 'Passrate (%)', data: [], tension: 0.35, pointRadius: 3, fill: false }]
   };
   lineOptions: ChartOptions<'line'> = {
     responsive: true,
-    interaction: { intersect: false, mode: 'index' },
-    animation: { duration: 600, easing: 'easeOutCubic' },
+    interaction: { mode: 'index', intersect: false },
     scales: { y: { beginAtZero: true, suggestedMax: 100, ticks: { stepSize: 20 } } },
-    plugins: { legend: { display: true }, tooltip: { enabled: true } }
+    plugins: { legend: { display: true } },
+    animation: { duration: 500 }
   };
 
-  // % pass par run (barres)
-  barsData: ChartConfiguration<'bar'>['data'] = {
-    labels: [],
-    datasets: [{ label: '% pass du run', data: [], borderWidth: 0 }]
-  };
-  barsOptions: ChartOptions<'bar'> = {
-    responsive: true,
-    animation: { duration: 600, easing: 'easeOutCubic' },
-    scales: { y: { beginAtZero: true, suggestedMax: 100, ticks: { stepSize: 20 } } },
-    plugins: { legend: { display: true }, tooltip: { enabled: true } }
-  };
-
-  // % pass par outil
-  toolBarData: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [{ label: '% pass', data: [] }] };
-  toolBarOptions: ChartOptions<'bar'> = {
+  /** Bar % pass des 5 derniers runs */
+  runsBarData: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [{ label: '% pass du run', data: [] }] };
+  runsBarOptions: ChartOptions<'bar'> = {
     responsive: true,
     scales: { y: { beginAtZero: true, suggestedMax: 100 } },
     plugins: { legend: { display: true } }
   };
 
-  // Empilé par type
-  byTypeData: ChartConfiguration<'bar'>['data'] = {
+  /** Bar % par outil */
+  toolBarData: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [{ label: '% pass', data: [] }] };
+  toolBarOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    scales: { y: { beginAtZero: true, suggestedMax: 100, ticks: { stepSize: 20 } } },
+    plugins: { legend: { display: true } }
+  };
+
+  /** Stacked par type (passed/failed) */
+  stackedTypeData: ChartConfiguration<'bar'>['data'] = {
     labels: [],
     datasets: [
-      { label: 'Passés', data: [] },
-      { label: 'Échoués', data: [] }
+      { label: 'Passés',  data: [], stack: 's', backgroundColor: '#2ecc71' },
+      { label: 'Échoués', data: [], stack: 's', backgroundColor: '#e74c3c' }
     ]
   };
-  byTypeOptions: ChartOptions<'bar'> = {
+  stackedTypeOptions: ChartOptions<'bar'> = {
     responsive: true,
-    scales: {
-      x: { stacked: true },
-      y: { stacked: true, beginAtZero: true }
-    },
-    plugins: { legend: { position: 'bottom' } }
+    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+    plugins: { legend: { display: true } }
   };
-  // ALIAS demandés par le template
-  stackedTypeData = this.byTypeData;
-  stackedTypeOptions = this.byTypeOptions;
 
-  constructor(private api: BoardAdminService) {}
+  constructor(private api: BoardAdminService, private dialog: MatDialog) {}
 
-  ngOnInit(): void {
-    this.loadAll();
-  }
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
+  ngOnInit(): void { this.loadAll(); }
+  ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
 
-  // ========= actions / filtres =========
+  // ====== Actions ======
+
   loadAll(): void {
-    // appelé par (change) sur les selects et sur les boutons de fenêtre
-    this.applyFilters();
-  }
-
-  applyFilters(): void {
-    this.page = 0;
-    this.fetchRuns();
+    this.page = 0; // on revient au début sur changement de filtres
     this.fetchRate();
+    this.fetchRuns();
     this.fetchCases();
     this.fetchToolRates();
-    this.fetchByType();
+    this.fetchTypeRates();
     this.fetchTopFails();
     this.fetchFlaky();
   }
 
   changeDays(d: 7 | 14 | 30 | 60): void {
     this.days = d;
-    this.applyFilters();
+    this.loadAll();
+
   }
 
   changePage(delta: number): void {
-    if (!this.casesResp) return;
     const maxPage = Math.max(0, Math.ceil(this.casesResp.total / this.size) - 1);
     this.page = Math.min(maxPage, Math.max(0, this.page + delta));
     this.fetchCases();
   }
 
-  // ========= fetchers =========
+  // ====== Fetchers ======
+
   private fetchRuns(): void {
     this.loadingRuns = true;
     const statusParam = this.fStatus === 'all' ? undefined : this.fStatus;
     this.api.getLatestRuns(this.project, 5, statusParam)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (r: RunCard[]) => {
-          this.runs = r || [];
-          const labels = this.runs.map(run => run.runId ?? '—');
-          const data = this.runs.map(run => {
-            const tot = run.total ?? 0;
-            const pas = run.passed ?? 0;
-            return tot ? Math.round((pas / tot) * 100) : 0;
-          });
-          this.barsData = { labels, datasets: [{ label: '% pass du run', data, borderWidth: 0 }] };
+        next: (rows) => {
+          this.runs = rows ?? [];
+          // bar des 5 derniers runs
+          const labels = this.runs.map(r => r.runId ?? '—');
+          const data   = this.runs.map(r => (r.total ? Math.round(((r.passed || 0) / r.total) * 100) : 0));
+          this.runsBarData = { labels, datasets: [{ label: '% pass du run', data }] };
           this.loadingRuns = false;
         },
         error: () => {
           this.runs = [];
-          this.barsData = { labels: [], datasets: [{ label: '% pass du run', data: [], borderWidth: 0 }] };
+          this.runsBarData = { labels: [], datasets: [{ label: '% pass du run', data: [] }] };
           this.loadingRuns = false;
         }
       });
@@ -202,42 +194,33 @@ export class BoardAdminComponent implements OnInit, OnDestroy {
     this.api.getPassrate(this.project, this.days)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (pts: PassratePoint[]) => {
-          this.rate = pts || [];
-          this.totalRuns = this.rate.reduce((s, p) => s + (p?.total || 0), 0);
-          this.totalPassed = this.rate.reduce((s, p) => s + (p?.passed || 0), 0);
+        next: (pts) => {
+          this.rate = pts ?? [];
+
+          // KPI
+          this.totalRuns   = this.rate.reduce((s, p) => s + (p.total || 0), 0);
+          this.totalPassed = this.rate.reduce((s, p) => s + (p.passed || 0), 0);
           const totalFailed = this.totalRuns - this.totalPassed;
           this.passPct = this.totalRuns ? Math.round((this.totalPassed / this.totalRuns) * 100) : 0;
 
-          this.donutData = {
+          // Donut
+          this.pieData = {
             labels: ['Passés', 'Échoués'],
-            datasets: [{ data: [this.totalPassed, totalFailed], borderWidth: 0 }]
+            datasets: [{ data: [this.totalPassed, totalFailed], borderWidth: 0, backgroundColor: ['#2ecc71', '#e74c3c'] }]
           };
-          // ré-aliaser pour le pie (au cas où l’instance change)
-          this.pieData = this.donutData as unknown as ChartConfiguration<'pie'>['data'];
 
+          // Line
           const labels = this.rate.map(p => p.day);
-          const data = this.rate.map(p => p.total ? Math.round((p.passed / p.total) * 100) : 0);
-          this.lineData = {
-            labels,
-            datasets: [{
-              label: 'Passrate (%)',
-              data,
-              tension: 0.35,
-              pointRadius: 3,
-              pointHoverRadius: 6,
-              fill: false
-            }]
-          };
+          const data   = this.rate.map(p => p.total ? Math.round((p.passed / p.total) * 100) : 0);
+          this.lineData = { labels, datasets: [{ label: 'Passrate (%)', data, tension: 0.35, pointRadius: 3, fill: false }] };
 
           this.loadingRate = false;
         },
         error: () => {
           this.rate = [];
           this.totalRuns = this.totalPassed = this.passPct = 0;
-          this.donutData = { labels: ['Passés', 'Échoués'], datasets: [{ data: [0, 0], borderWidth: 0 }] };
-          this.pieData = this.donutData as unknown as ChartConfiguration<'pie'>['data'];
-          this.lineData = { labels: [], datasets: [{ label: 'Passrate (%)', data: [], tension: 0.35, pointRadius: 3, pointHoverRadius: 6, fill: false }] };
+          this.pieData  = { labels: ['Passés', 'Échoués'], datasets: [{ data: [0, 0], borderWidth: 0 }] };
+          this.lineData = { labels: [], datasets: [{ label: 'Passrate (%)', data: [], tension: 0.35, pointRadius: 3, fill: false }] };
           this.loadingRate = false;
         }
       });
@@ -251,7 +234,7 @@ export class BoardAdminComponent implements OnInit, OnDestroy {
     this.api.searchCases(this.project, this.page, this.size, { tool, status })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (res: CaseSearchResponse) => { this.casesResp = res; this.loadingCases = false; },
+        next: (res) => { this.casesResp = res; this.loadingCases = false; },
         error: () => {
           this.casesResp = { page: 0, size: this.size, total: 0, items: [] };
           this.loadingCases = false;
@@ -260,45 +243,61 @@ export class BoardAdminComponent implements OnInit, OnDestroy {
   }
 
   private fetchToolRates(): void {
+    this.loadingTool = true;
     this.api.getToolRates(this.project, this.days)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (rows: ToolRate[]) => {
-          this.toolRates = rows || [];
+        next: rows => {
+          this.toolRates = rows ?? [];
           const labels = this.toolRates.map(r => r.tool || '—');
-          const data = this.toolRates.map(r => r.total ? Math.round(((r.passed ?? 0) / r.total) * 100) : 0);
-          this.toolBarData = { labels, datasets: [{ label: '% pass', data }] };
+          const data   = this.toolRates.map(r => r.total ? Math.round((r.passed / r.total) * 100) : 0);
+          this.toolBarData = {
+            labels,
+            datasets: [{ label: '% pass', data ,
+              backgroundColor: ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4'],
+              borderRadius: 8,
+              maxBarThickness: 28
+            }]
+          };
+
+          this.loadingTool = false;
         },
         error: () => {
           this.toolRates = [];
           this.toolBarData = { labels: [], datasets: [{ label: '% pass', data: [] }] };
+          this.loadingTool = false;
         }
       });
+
+
   }
 
-  private fetchByType(): void {
-    this.api.getByType(this.project, this.days)
+  private fetchTypeRates(): void {
+    this.loadingType = true;
+    const status = this.fStatus === 'all' ? undefined : this.fStatus;
+    const tool   = this.fTool   === 'all' ? undefined : (this.fTool === 'restAssured' ? 'restAssured' : this.fTool);
+
+    this.api.getTypeRates(this.project, this.days, status, tool)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (rows: TypeStat[]) => {
-          this.typeStats = rows || [];
-          const labels = this.typeStats.map(r => r.type);
-          const passed = this.typeStats.map(r => r.passed ?? 0);
-          const failed = this.typeStats.map(r => r.failed ?? 0);
-          this.byTypeData = {
+        next: rows => {
+          this.typeRates = rows ?? [];
+          const labels   = this.typeRates.map(r => r.type || '—');
+          const passed   = this.typeRates.map(r => r.passed || 0);
+          const failed   = this.typeRates.map(r => (r.total || 0) - (r.passed || 0));
+          this.stackedTypeData = {
             labels,
             datasets: [
-              { label: 'Passés', data: passed },
-              { label: 'Échoués', data: failed }
+              { label: 'Passés',  data: passed, stack: 's', backgroundColor: '#2ecc71' },
+              { label: 'Échoués', data: failed, stack: 's', backgroundColor: '#e74c3c' }
             ]
           };
-          // alias pour le template
-          this.stackedTypeData = this.byTypeData;
+          this.loadingType = false;
         },
         error: () => {
-          this.typeStats = [];
-          this.byTypeData = { labels: [], datasets: [{ label: 'Passés', data: [] }, { label: 'Échoués', data: [] }] };
-          this.stackedTypeData = this.byTypeData;
+          this.typeRates = [];
+          this.stackedTypeData = { labels: [], datasets: [{ label: 'Passés', data: [] }, { label: 'Échoués', data: [] }] as any };
+          this.loadingType = false;
         }
       });
   }
@@ -307,7 +306,7 @@ export class BoardAdminComponent implements OnInit, OnDestroy {
     this.api.getTopFails(this.project, this.days, 5)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (rows: NamedCount[]) => this.topFails = rows || [],
+        next: rows => this.topFails = rows ?? [],
         error: () => this.topFails = []
       });
   }
@@ -316,17 +315,17 @@ export class BoardAdminComponent implements OnInit, OnDestroy {
     this.api.getFlaky(this.project, this.days, 5)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (rows: NamedCount[]) => this.flaky = rows || [],
+        next: rows => this.flaky = rows ?? [],
         error: () => this.flaky = []
       });
   }
 
-  // ====== helpers ======
+  // ====== Helpers ======
+
   asDate(iso?: string | null): string {
     if (!iso) return '-';
     const d = new Date(iso);
-    if (isNaN(d.getTime())) return '-';
-    return d.toLocaleString();
+    return isNaN(d.getTime()) ? '-' : d.toLocaleString();
   }
 
   statusClass(s?: string | null): string {
@@ -335,11 +334,14 @@ export class BoardAdminComponent implements OnInit, OnDestroy {
     return 'badge other';
   }
 
-  // clic sur une ligne de case -> on branchera un MatDialog ensuite
+  // click sur une ligne -> modal
   openCaseDetail(c: CaseItem): void {
-    // TODO: ouvrir un MatDialog avec les détails; pour l’instant on trace
-    console.log('Case detail:', c);
+    this.dialog.open(CaseDetailDialogComponent, {
+      width: '700px',
+      data: c
+    });
   }
 
-  Math = Math; // pour le template
+  // pour {{ Math.* }} dans le template
+  Math = Math;
 }

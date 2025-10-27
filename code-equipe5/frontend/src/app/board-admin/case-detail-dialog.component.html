@@ -1,57 +1,47 @@
-<h3 mat-dialog-title>Détail du test</h3>
+<h2 class="dialog-title">Détails du cas</h2>
 
-<div mat-dialog-content class="content">
-  <div class="row">
-    <div class="label">Nom</div>
-    <div class="value ellipsis" [title]="data?.name">{{ data?.name }}</div>
-  </div>
-  <div class="row">
-    <div class="label">Run</div>
-    <div class="value">{{ data?.runId }}</div>
-  </div>
-  <div class="row">
-    <div class="label">Suite</div>
-    <div class="value">{{ data?.suite }}</div>
-  </div>
-  <div class="row">
-    <div class="label">Type</div>
-    <div class="value">{{ data?.type }}</div>
-  </div>
-  <div class="row">
-    <div class="label">Outil</div>
-    <div class="value">{{ data?.tool }}</div>
-  </div>
-  <div class="row">
-    <div class="label">Statut</div>
-    <div class="value">
-      <span class="badge" [class.pass]="data?.status==='passed'" [class.fail]="data?.status==='failed'">
-        {{ data?.status }}
-      </span>
-    </div>
-  </div>
-  <div class="row">
-    <div class="label">Date</div>
-    <div class="value">{{ data?.executedAt | date:'medium' }}</div>
+<div class="dialog-body">
+  <div class="detail">
+    <span class="label">Nom du test :</span>
+    <span class="value">{{ data?.name || '—' }}</span>
   </div>
 
-  <div class="block" *ngIf="data?.expected || data?.actual">
-    <div class="label">Expected</div>
-    <pre class="code">{{ pretty(data?.expected) }}</pre>
-    <div class="label">Actual</div>
-    <pre class="code">{{ pretty(data?.actual) }}</pre>
+  <div class="detail">
+    <span class="label">Outil :</span>
+    <span class="value">{{ data?.tool || '—' }}</span>
   </div>
 
-  <div class="block" *ngIf="data?.headers">
-    <div class="label">Headers</div>
-    <pre class="code">{{ pretty(data?.headers) }}</pre>
+  <div class="detail">
+    <span class="label">Type :</span>
+    <span class="value">{{ data?.type || '—' }}</span>
   </div>
 
-  <div class="block" *ngIf="data?.error">
-    <div class="label">Erreur</div>
-    <pre class="code error">{{ pretty(data?.error) }}</pre>
+  <div class="detail">
+    <span class="label">Suite :</span>
+    <span class="value">{{ data?.suite || '—' }}</span>
+  </div>
+
+  <div class="detail">
+    <span class="label">Statut :</span>
+    <span class="value"><span [class]="statusClass">{{ data?.status }}</span></span>
+  </div>
+
+  <div class="detail">
+    <span class="label">Run ID :</span>
+    <span class="value">{{ data?.runId || '—' }}</span>
+  </div>
+
+  <div class="detail">
+    <span class="label">Date d’exécution :</span>
+    <span class="value">{{ data?.executedAt | date: 'medium' }}</span>
+  </div>
+
+  <div class="detail" *ngIf="data?.duration">
+    <span class="label">Durée :</span>
+    <span class="value">{{ data.duration }} ms</span>
   </div>
 </div>
 
-<div mat-dialog-actions align="end">
-  <button mat-button (click)="close()">Fermer</button>
+<div class="dialog-footer">
+  <button (click)="close()">Fermer</button>
 </div>

@@ -20,6 +20,7 @@ import { authInterceptorProviders } from './_helpers/auth.interceptor';
 import { ProjectComponent } from './project/project.component';
 import { TestApiComponent } from './interface-test-api/test-api/test-api.component';
 
+
 import { MatTableModule } from '@angular/material/table';
 
 import {MatFormFieldModule} from "@angular/material/form-field";
@@ -65,6 +66,7 @@ import { NgChartsModule } from 'ng2-charts';
     PerformanceTestApiComponent,
     GatlingApiComponent,
     JmeterApiComponent,
+    CaseDetailDialogComponent,
     CaseDetailDialogComponent,
 
   ],

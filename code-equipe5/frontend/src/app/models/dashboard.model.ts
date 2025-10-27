@@ -69,3 +69,11 @@ export interface NamedCount {
   count: number;
   tool?: string;
 }
+
+
+
+export interface TypeRate {
+  type: string | null;
+  passed: number;
+  total: number;
+}
